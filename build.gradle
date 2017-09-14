@@ -20,7 +20,7 @@ allprojects {
 
     project.ext {
         buildToolsVersion = "26.0.1"
-        minSdkVersion = 21
+        minSdkVersion = 19
         targetSdkVersion = 26
         compileSdkVersion = 26
 

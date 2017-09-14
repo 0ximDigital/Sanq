@@ -39,12 +39,27 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    configurations {
+        room
+        realm
+    }
 }
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':data')
+//    compile project(path:':data', configuration:'roomDebug')
     compile project(':domain')
+
+    room project(
+            path: ':data',
+            configuration: 'roomDebug'
+    )
+
+    realm project(
+            path: ':data',
+            configuration: 'realmDebug'
+    )
 
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
