@@ -3,7 +3,6 @@ package oxim.digital.sanq;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-
 import oxim.digital.sanq.data.Storage;
 
 public class MainActivity extends AppCompatActivity {
