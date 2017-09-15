@@ -40,25 +40,32 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    productFlavors {
+        room {}
+        realm {}
+    }
+
     configurations {
-        room
-        realm
+        roomCompile
+        realmCompile
     }
 }
+
+
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
 //    compile project(path:':data', configuration:'roomDebug')
     compile project(':domain')
 
-    room project(
+    roomCompile project(
             path: ':data',
-            configuration: 'roomDebug'
+            configuration: 'roomRelease'
     )
 
-    realm project(
+    realmCompile project(
             path: ':data',
-            configuration: 'realmDebug'
+            configuration: 'realmRelease'
     )
 
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {

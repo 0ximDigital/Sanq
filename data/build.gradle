@@ -33,17 +33,16 @@ android {
         }
     }
 
-    flavorDimensions "top"
 
     productFlavors {
         room {
-            dimension "top"
         }
 
         realm {
-            dimension "top"
         }
     }
+
+    publishNonDefault true
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
