@@ -53,8 +53,14 @@ dependencies {
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 
+    compile "com.google.dagger:dagger:2.9"
+    annotationProcessor "com.google.dagger:dagger-compiler:2.9"
+    provided 'javax.annotation:jsr250-api:1.0'
+
     compile 'com.annimon:stream:' + project.ext.streamsWrapperVersion
 
     compile 'io.reactivex.rxjava2:rxandroid:' + project.ext.rxAndroidVersion
     compile 'io.reactivex.rxjava2:rxjava:' + project.ext.rxJavaVersion
+
+    compile 'com.github.bumptech.glide:glide:3.7.0'
 }
