@@ -7,4 +7,10 @@ public final class HomePresenter extends BasePresenter<HomeContract.View> implem
     public HomePresenter(final HomeContract.View view) {
         super(view);
     }
+
+    @Override
+    public void start() {
+        super.start();
+        router.showUserSubscriptionsScreen();
+    }
 }

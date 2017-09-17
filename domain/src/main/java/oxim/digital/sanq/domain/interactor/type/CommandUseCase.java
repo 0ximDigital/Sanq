@@ -1,4 +1,4 @@
-package oxim.digital.sanq.domain.interactor;
+package oxim.digital.sanq.domain.interactor.type;
 
 import io.reactivex.Completable;
 

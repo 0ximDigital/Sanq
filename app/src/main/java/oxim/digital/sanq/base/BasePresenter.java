@@ -7,7 +7,10 @@ import android.util.Log;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
 import io.reactivex.Scheduler;
+import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
@@ -19,14 +22,18 @@ import oxim.digital.sanq.router.Router;
 public abstract class BasePresenter<View extends BaseView> implements ScopedPresenter {
 
     @Inject
-    protected Router router;
-
-    @Inject
-    protected ViewConsumerQueueFactory viewConsumerQueueFactory;
+    ViewConsumerQueueFactory viewConsumerQueueFactory;
 
     @Inject
     @Named(ThreadingModule.MAIN_SCHEDULER)
-    Scheduler mainThreadScheduler;
+    Scheduler observeScheduler;
+
+    @Inject
+    @Named(ThreadingModule.BACKGROUND_SCHEDULER)
+    protected Scheduler backgroundScheduler;
+
+    @Inject
+    protected Router router;
 
     private final View view;
     private ViewConsumerQueue<View> viewConsumerQueue;
@@ -43,7 +50,7 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         this.viewConsumerQueue = viewConsumerQueueFactory.getViewConsumerQueue();
 
         addDisposable(viewConsumerQueue.viewConsumersFlowable()
-                                       .observeOn(mainThreadScheduler)
+                                       .observeOn(observeScheduler)
                                        .subscribe(this::onViewConsumer, this::logError));
     }
 
@@ -74,7 +81,19 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         router.goBack();
     }
 
-    protected void addDisposable(final Disposable disposable) {
+    public void subscribeTo(final Flowable<Consumer<View>> flowable, final Consumer<View> completionConsumer, final Consumer<Throwable> errorConsumer) {
+        addDisposable(flowable.observeOn(observeScheduler).subscribe(this::consumeView, errorConsumer, () -> consumeView(completionConsumer)));
+    }
+
+    public void subscribeTo(final Single<Consumer<View>> single, final Consumer<Throwable> errorConsumer) {
+        addDisposable(single.observeOn(observeScheduler).subscribe(this::consumeView, errorConsumer));
+    }
+
+    public void subscribeTo(final Completable completable, final Consumer<View> completionConsumer, final Consumer<Throwable> errorConsumer) {
+        addDisposable(completable.observeOn(observeScheduler).subscribe(() -> consumeView(completionConsumer), errorConsumer));
+    }
+
+    private void addDisposable(final Disposable disposable) {
         disposables.add(disposable);
     }
 
@@ -87,5 +106,9 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
             // Error reporting, Crashlytics in example
             Log.e(getClass().getSimpleName(), throwable.getMessage(), throwable);
         }
+    }
+
+    public final void noOp(final Object object) {
+        // No-op
     }
 }
