@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.ui.model.FeedViewModel;
@@ -50,13 +50,13 @@ public final class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.FeedView
 
     static final class FeedViewHolder extends RecyclerView.ViewHolder {
 
-        @Bind(R.id.feed_image)
+        @BindView(R.id.feed_image)
         ImageView feedImage;
 
-        @Bind(R.id.feed_title)
+        @BindView(R.id.feed_title)
         TextView feedTitle;
 
-        @Bind(R.id.feed_description)
+        @BindView(R.id.feed_description)
         TextView feedDescription;
 
         private final ImageLoader imageLoader;

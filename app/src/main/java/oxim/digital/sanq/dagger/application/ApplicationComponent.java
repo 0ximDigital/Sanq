@@ -34,7 +34,7 @@ public interface ApplicationComponent extends ApplicationComponentInjects, Appli
                                              .threadingModule(new ThreadingModule())
                                              .utilsModule(new UtilsModule())
                                              .useCaseModule(new UseCaseModule())
-                                             .dataModule(new DataModule())
+                                             .dataModule(new DataModule(sanqApplication))
                                              .mappersModule(new MappersModule())
                                              .serviceModule(new ServiceModule())
                                              .build();

@@ -4,6 +4,8 @@ import android.app.Application;
 import android.content.Context;
 import android.support.v7.app.AppCompatDelegate;
 
+import com.facebook.stetho.Stetho;
+
 import oxim.digital.sanq.dagger.ComponentFactory;
 
 /**
@@ -35,6 +37,8 @@ public final class SanqApplication extends Application {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
         applicationComponent = ComponentFactory.createApplicationComponent(this);
         applicationComponent.inject(this);
+
+        Stetho.initializeWithDefaults(this);
     }
 
     public ApplicationComponent getApplicationComponent() {

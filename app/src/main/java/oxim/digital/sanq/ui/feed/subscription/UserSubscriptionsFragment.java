@@ -4,23 +4,30 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
-import butterknife.Bind;
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
+import io.reactivex.schedulers.Schedulers;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
 import oxim.digital.sanq.base.ScopedPresenter;
 import oxim.digital.sanq.dagger.fragment.FragmentComponent;
+import oxim.digital.sanq.data.feed.db.crudder.ArticleCrudder;
+import oxim.digital.sanq.data.feed.service.model.ApiArticle;
+import oxim.digital.sanq.domain.model.Article;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 import oxim.digital.sanq.util.ImageLoader;
 
@@ -32,15 +39,20 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     UserSubscriptionsContract.Presenter presenter;
 
     @Inject
+    ArticleCrudder articleCrudder;
+
+    @Inject
     ImageLoader imageLoader;
 
-    @Bind(R.id.user_feeds_recycler_view)
+    @BindView(R.id.user_feeds_recycler_view)
     RecyclerView userFeedsRecyclerView;
 
-    @Bind(R.id.empty_state_view)
+    @BindView(R.id.empty_state_view)
     FrameLayout emptyStateView;
 
     private FeedAdapter feedAdapter;
+
+    private Unbinder unbinder = Unbinder.EMPTY;
 
     public static UserSubscriptionsFragment newInstance() {
         return new UserSubscriptionsFragment();
@@ -56,11 +68,33 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         return presenter;
     }
 
+    @Override
+    public void onCreate(final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        observeArticles();
+    }
+
+    private void observeArticles() {
+        articleCrudder.getAllArticles()
+                      .subscribe(this::onAllArticles, Throwable::printStackTrace);
+
+        articleCrudder.getFavouriteArticles()
+                      .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+    }
+
+    private void onAllArticles(final List<Article> articles) {
+        Log.i("WAT", "All articles -> " + String.valueOf(articles));
+    }
+
+    private void onFavouriteArticles(final List<Article> favouriteArticles) {
+        Log.i("WAT", "Favourite articles -> " + String.valueOf(favouriteArticles));
+    }
+
     @Nullable
     @Override
     public View onCreateView(final LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable final Bundle savedInstanceState) {
         final View fragmentView = inflater.inflate(R.layout.fragment_user_subscriptions, container, false);
-        ButterKnife.bind(this, fragmentView);
+        unbinder = ButterKnife.bind(this, fragmentView);
         return fragmentView;
     }
 
@@ -92,9 +126,47 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         presenter.subscribeToTheNewFeed(UUID.randomUUID().toString());
     }
 
+    @OnClick({R.id.test_insert_button, R.id.test_favourite_button, R.id.test_unfavourite_button})
+    public void onTestClick(View view) {
+        switch (view.getId()) {
+            case R.id.test_insert_button:
+                insertArticles();
+                break;
+            case R.id.test_favourite_button:
+                favouriteArticle();
+                break;
+            case R.id.test_unfavourite_button:
+                unfavouriteArticle();
+                break;
+        }
+    }
+
+    private void insertArticles() {
+
+        final ApiArticle article1 = new ApiArticle("article_1,", "link_1", 0);
+        final ApiArticle article2 = new ApiArticle("article_2,", "link_2", 0);
+        final ApiArticle article3 = new ApiArticle("article_3,", "link_3", 0);
+
+        articleCrudder.insertArticles(Arrays.asList(article1, article2, article3))
+                      .subscribeOn(Schedulers.io())
+                      .subscribe(() -> Log.w("WAT", "Done with insert"));
+    }
+
+    private void favouriteArticle() {
+        articleCrudder.favouriteArticle(2)
+                      .subscribeOn(Schedulers.io())
+                      .subscribe(() -> Log.w("WAT", "Favorited article -> 2"), Throwable::printStackTrace);
+    }
+
+    private void unfavouriteArticle() {
+        articleCrudder.unfavouriteArticle(2)
+                      .subscribeOn(Schedulers.io())
+                      .subscribe(() -> Log.w("WAT", "Unfavorited article -> 2"), Throwable::printStackTrace);
+    }
+
     @Override
     public void onDestroyView() {
-        ButterKnife.unbind(this);
+        unbinder.unbind();
         super.onDestroyView();
     }
 }

@@ -51,11 +51,11 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
 
         addDisposable(viewConsumerQueue.viewConsumersFlowable()
                                        .observeOn(observeScheduler)
-                                       .subscribe(this::onViewConsumer, this::logError));
+                                       .subscribe(this::onViewAction, this::logError));
     }
 
-    private void onViewConsumer(final Consumer<View> viewConsumer) throws Exception {
-        viewConsumer.accept(view);
+    private void onViewAction(final Consumer<View> viewAction) throws Exception {
+        viewAction.accept(view);
     }
 
     @Override
@@ -80,6 +80,8 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
     public void back() {
         router.goBack();
     }
+
+    // TODO - data source builder? Something line subscribeTo(source).onError(thr -> ).onCompletion(() -> ).onValue(val -> )
 
     public void subscribeTo(final Flowable<Consumer<View>> flowable, final Consumer<View> completionConsumer, final Consumer<Throwable> errorConsumer) {
         addDisposable(flowable.observeOn(observeScheduler).subscribe(this::consumeView, errorConsumer, () -> consumeView(completionConsumer)));

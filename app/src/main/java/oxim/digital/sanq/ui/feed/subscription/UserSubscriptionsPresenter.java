@@ -48,7 +48,6 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
     }
 
     @Override
-
     public void subscribeToTheNewFeed(final String feedUrl) {
         subscribeTo(Completable.timer(3, TimeUnit.SECONDS)
                                .andThen(subscribeUserToFeedUseCase.execute(feedUrl))
