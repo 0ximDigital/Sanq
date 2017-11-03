@@ -17,7 +17,7 @@ public final class RxModel {
     public static <T> Flowable<T> createFlowable(final ObservableDataSource observableDataSource, final Callable<T> dataCallable) {
         return createFlowable(observableDataSource)
                 .observeOn(Schedulers.io())
-                .map(object -> Optional.ofNullable(dataCallable.call()))
+                .map(invalidationEvent -> Optional.ofNullable(dataCallable.call()))
                 .filter(Optional::isPresent)
                 .map(Optional::get);
     }

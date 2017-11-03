@@ -23,13 +23,11 @@ public final class ArticleCrudder extends BaseObservableDataSource {
     }
 
     public Completable insertArticle(final ApiArticle article) {
-        return Completable.fromAction(() -> articleDao.insertArticle(modelConverter.apiToModel(article, 0)))
-                          .andThen(notifySourceInvalidated());
+        return command(() -> articleDao.insertArticle(modelConverter.apiToModel(article, 0)));
     }
 
     public Completable insertArticles(final List<ApiArticle> articles) {
-        return Completable.fromAction(() -> insertArticlesInternal(articles))
-                          .andThen(notifySourceInvalidated());
+        return command(() -> insertArticlesInternal(articles));
     }
 
     private void insertArticlesInternal(final List<ApiArticle> articles) {
@@ -41,22 +39,20 @@ public final class ArticleCrudder extends BaseObservableDataSource {
     public Flowable<List<Article>> getAllArticles() {
         return query(() -> Stream.of(articleDao.getAllArticles())
                                  .map(modelConverter::modelToDomain)
-                                 .toList());
+                                 .toList(), 100);
     }
 
     public Flowable<List<Article>> getFavouriteArticles() {
         return query(() -> Stream.of(articleDao.getFavouriteArticles())
                                  .map(modelConverter::modelToDomain)
-                                 .toList());
+                                 .toList(), 200);
     }
 
     public Completable favouriteArticle(int articleId) {
-        return Completable.fromAction(() -> articleDao.favouriteArticle(articleId))
-                          .andThen(notifySourceInvalidated());
+        return command(() -> articleDao.favouriteArticle(articleId));
     }
 
     public Completable unfavouriteArticle(int articleId) {
-        return Completable.fromAction(() -> articleDao.unfavouriteArticle(articleId))
-                          .andThen(notifySourceInvalidated());
+        return command(() -> articleDao.unfavouriteArticle(articleId));
     }
 }

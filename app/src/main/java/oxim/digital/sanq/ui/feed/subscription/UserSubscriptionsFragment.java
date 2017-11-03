@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,13 +19,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.Unbinder;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
 import io.reactivex.schedulers.Schedulers;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
 import oxim.digital.sanq.base.ScopedPresenter;
 import oxim.digital.sanq.dagger.fragment.FragmentComponent;
 import oxim.digital.sanq.data.feed.db.crudder.ArticleCrudder;
-import oxim.digital.sanq.data.feed.service.model.ApiArticle;
 import oxim.digital.sanq.domain.model.Article;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 import oxim.digital.sanq.util.ImageLoader;
@@ -54,6 +55,8 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     private Unbinder unbinder = Unbinder.EMPTY;
 
+    private CompositeDisposable dataDisposables = new CompositeDisposable();
+
     public static UserSubscriptionsFragment newInstance() {
         return new UserSubscriptionsFragment();
     }
@@ -66,20 +69,6 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     @Override
     public ScopedPresenter getPresenter() {
         return presenter;
-    }
-
-    @Override
-    public void onCreate(final Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        observeArticles();
-    }
-
-    private void observeArticles() {
-        articleCrudder.getAllArticles()
-                      .subscribe(this::onAllArticles, Throwable::printStackTrace);
-
-        articleCrudder.getFavouriteArticles()
-                      .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
     }
 
     private void onAllArticles(final List<Article> articles) {
@@ -109,6 +98,32 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         feedAdapter.setHasStableIds(true);
         userFeedsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         userFeedsRecyclerView.setAdapter(feedAdapter);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        observeArticles();
+    }
+
+    private Disposable firstFavDisposable = Disposables.disposed();
+    private Disposable secondFavDisposable = Disposables.disposed();
+
+    private void observeArticles() {
+        dataDisposables.add(articleCrudder.getAllArticles()
+                                          .subscribe(this::onAllArticles, Throwable::printStackTrace));
+
+        firstFavDisposable = articleCrudder.getFavouriteArticles()
+                                           .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+
+        secondFavDisposable = articleCrudder.getFavouriteArticles()
+                                            .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+    }
+
+    @Override
+    public void onPause() {
+        dataDisposables.clear();
+        super.onPause();
     }
 
     @Override
@@ -143,25 +158,39 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     private void insertArticles() {
 
-        final ApiArticle article1 = new ApiArticle("article_1,", "link_1", 0);
-        final ApiArticle article2 = new ApiArticle("article_2,", "link_2", 0);
-        final ApiArticle article3 = new ApiArticle("article_3,", "link_3", 0);
+        if (!firstFavDisposable.isDisposed()) {
+            Log.w("WAT", "Disposing first fav disposable");
+            firstFavDisposable.dispose();
+        } else if (!secondFavDisposable.isDisposed()) {
+            Log.w("WAT", "Disposing second fav disposable");
+            secondFavDisposable.dispose();
+        } else {
+            Log.w("WAT", "Creating first fav disposable");
+            firstFavDisposable = articleCrudder.getFavouriteArticles()
+                                               .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+        }
+//        final ApiArticle article1 = new ApiArticle("article_1,", "link_1", 0);
+//        final ApiArticle article2 = new ApiArticle("article_2,", "link_2", 0);
+//        final ApiArticle article3 = new ApiArticle("article_3,", "link_3", 0);
+//
+//        articleCrudder.insertArticles(Arrays.asList(article1, article2, article3))
+//                      .subscribeOn(Schedulers.io())
+//                      .subscribe(() -> Log.w("WAT", "Done with insert"));
 
-        articleCrudder.insertArticles(Arrays.asList(article1, article2, article3))
-                      .subscribeOn(Schedulers.io())
-                      .subscribe(() -> Log.w("WAT", "Done with insert"));
     }
 
     private void favouriteArticle() {
         articleCrudder.favouriteArticle(2)
                       .subscribeOn(Schedulers.io())
-                      .subscribe(() -> Log.w("WAT", "Favorited article -> 2"), Throwable::printStackTrace);
+                      .subscribe(() -> {
+                      }, Throwable::printStackTrace);
     }
 
     private void unfavouriteArticle() {
         articleCrudder.unfavouriteArticle(2)
                       .subscribeOn(Schedulers.io())
-                      .subscribe(() -> Log.w("WAT", "Unfavorited article -> 2"), Throwable::printStackTrace);
+                      .subscribe(() -> {
+                      }, Throwable::printStackTrace);
     }
 
     @Override
