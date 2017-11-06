@@ -10,7 +10,8 @@ import oxim.digital.sanq.data.feed.converter.ModelConverter;
 import oxim.digital.sanq.data.feed.db.dao.ArticleDao;
 import oxim.digital.sanq.data.feed.service.model.ApiArticle;
 import oxim.digital.sanq.data.reactive.ObservableDataSource;
-import oxim.digital.sanq.domain.model.Article;
+import oxim.digital.sanq.domain.model.AllArticles;
+import oxim.digital.sanq.domain.model.FavouriteArticles;
 
 public final class ArticleCrudder extends ObservableDataSource<ArticleDao> {
 
@@ -35,16 +36,16 @@ public final class ArticleCrudder extends ObservableDataSource<ArticleDao> {
               .forEach(articleDao::insertArticle);
     }
 
-    public Flowable<List<Article>> getAllArticles() {
-        return query(articleDao -> () -> Stream.of(articleDao.getAllArticles())
-                                               .map(modelConverter::modelToDomain)
-                                               .toList(), 100);
+    public Flowable<AllArticles> getAllArticles() {
+        return query(articleDao -> () -> AllArticles.from(Stream.of(articleDao.getAllArticles())
+                                                                .map(modelConverter::modelToDomain)
+                                                                .toList()), AllArticles.class);
     }
 
-    public Flowable<List<Article>> getFavouriteArticles() {
-        return query(articleDao -> () -> Stream.of(articleDao.getFavouriteArticles())
-                                               .map(modelConverter::modelToDomain)
-                                               .toList(), 200);
+    public Flowable<FavouriteArticles> getFavouriteArticles() {
+        return query(articleDao -> () -> FavouriteArticles.from(Stream.of(articleDao.getFavouriteArticles())
+                                                                      .map(modelConverter::modelToDomain)
+                                                                      .toList()), FavouriteArticles.class);
     }
 
     public Completable favouriteArticle(int articleId) {

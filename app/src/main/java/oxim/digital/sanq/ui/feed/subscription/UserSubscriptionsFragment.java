@@ -28,7 +28,8 @@ import oxim.digital.sanq.base.BaseFragment;
 import oxim.digital.sanq.base.ScopedPresenter;
 import oxim.digital.sanq.dagger.fragment.FragmentComponent;
 import oxim.digital.sanq.data.feed.db.crudder.ArticleCrudder;
-import oxim.digital.sanq.domain.model.Article;
+import oxim.digital.sanq.domain.model.AllArticles;
+import oxim.digital.sanq.domain.model.FavouriteArticles;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 import oxim.digital.sanq.util.ImageLoader;
 
@@ -71,11 +72,11 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         return presenter;
     }
 
-    private void onAllArticles(final List<Article> articles) {
+    private void onAllArticles(final AllArticles articles) {
         Log.i("WAT", "All articles -> " + String.valueOf(articles));
     }
 
-    private void onFavouriteArticles(final List<Article> favouriteArticles) {
+    private void onFavouriteArticles(final FavouriteArticles favouriteArticles) {
         Log.i("WAT", "Favourite articles -> " + String.valueOf(favouriteArticles));
     }
 
@@ -159,7 +160,7 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         } else if (secondFavDisposable.isDisposed()) {
             Log.w("WAT", "Creating second fav disposable");
             secondFavDisposable = articleCrudder.getFavouriteArticles()
-                                               .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+                                                .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
         } else {
             Log.w("WAT", "Disposing disposables");
             firstFavDisposable.dispose();
