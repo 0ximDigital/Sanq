@@ -14,21 +14,21 @@ public final class RxModel {
 
     private static final Object INVALIDATE_EVENT = new Object();
 
-    public static <T> Flowable<T> createFlowable(final ObservableDataSource observableDataSource, final Callable<T> dataCallable) {
-        return createFlowable(observableDataSource)
+    public static <T> Flowable<T> createFlowable(final InvalidatingDataSource invalidatingDataSource, final Callable<T> dataCallable) {
+        return createFlowable(invalidatingDataSource)
                 .observeOn(Schedulers.io())
                 .map(invalidationEvent -> Optional.ofNullable(dataCallable.call()))
                 .filter(Optional::isPresent)
                 .map(Optional::get);
     }
 
-    private static Flowable<Object> createFlowable(final ObservableDataSource observableDataSource) {
+    private static Flowable<Object> createFlowable(final InvalidatingDataSource invalidatingDataSource) {
         return Flowable.create(flowableEmitter -> {
             if (!flowableEmitter.isCancelled()) {
                 final DataSourceInvalidationObserver observer = () -> emitInvalidateEvent(flowableEmitter);
 
-                observableDataSource.addObserver(observer);
-                flowableEmitter.setDisposable(Disposables.fromAction(() -> observableDataSource.removeObserver(observer)));
+                invalidatingDataSource.addObserver(observer);
+                flowableEmitter.setDisposable(Disposables.fromAction(() -> invalidatingDataSource.removeObserver(observer)));
 
                 emitInvalidateEvent(flowableEmitter);
             }

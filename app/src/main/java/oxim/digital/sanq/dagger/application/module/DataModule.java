@@ -45,7 +45,7 @@ public final class DataModule {
     @Provides
     @Singleton
     ArticleCrudder provideArticleCrudder(final ModelConverter modelConverter, final ArticleDao articleDao) {
-        return new ArticleCrudder(modelConverter, articleDao);
+        return new ArticleCrudder(articleDao, modelConverter);
     }
 
     @Provides
