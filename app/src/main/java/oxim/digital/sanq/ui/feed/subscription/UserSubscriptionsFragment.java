@@ -112,12 +112,6 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     private void observeArticles() {
         dataDisposables.add(articleCrudder.getAllArticles()
                                           .subscribe(this::onAllArticles, Throwable::printStackTrace));
-
-        firstFavDisposable = articleCrudder.getFavouriteArticles()
-                                           .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
-
-        secondFavDisposable = articleCrudder.getFavouriteArticles()
-                                            .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
     }
 
     @Override
@@ -158,16 +152,18 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     private void insertArticles() {
 
-        if (!firstFavDisposable.isDisposed()) {
-            Log.w("WAT", "Disposing first fav disposable");
-            firstFavDisposable.dispose();
-        } else if (!secondFavDisposable.isDisposed()) {
-            Log.w("WAT", "Disposing second fav disposable");
-            secondFavDisposable.dispose();
-        } else {
+        if (firstFavDisposable.isDisposed()) {
             Log.w("WAT", "Creating first fav disposable");
             firstFavDisposable = articleCrudder.getFavouriteArticles()
                                                .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+        } else if (secondFavDisposable.isDisposed()) {
+            Log.w("WAT", "Creating second fav disposable");
+            secondFavDisposable = articleCrudder.getFavouriteArticles()
+                                               .subscribe(this::onFavouriteArticles, Throwable::printStackTrace);
+        } else {
+            Log.w("WAT", "Disposing disposables");
+            firstFavDisposable.dispose();
+            secondFavDisposable.dispose();
         }
 //        final ApiArticle article1 = new ApiArticle("article_1,", "link_1", 0);
 //        final ApiArticle article2 = new ApiArticle("article_2,", "link_2", 0);

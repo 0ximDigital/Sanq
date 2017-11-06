@@ -22,6 +22,50 @@ public final class Article {
     }
 
     @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        final Article article = (Article) o;
+
+        if (id != article.id) {
+            return false;
+        }
+        if (feedId != article.feedId) {
+            return false;
+        }
+        if (publicationDate != article.publicationDate) {
+            return false;
+        }
+        if (isNew != article.isNew) {
+            return false;
+        }
+        if (isFavourite != article.isFavourite) {
+            return false;
+        }
+        if (title != null ? !title.equals(article.title) : article.title != null) {
+            return false;
+        }
+        return link != null ? link.equals(article.link) : article.link == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + feedId;
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        result = 31 * result + (link != null ? link.hashCode() : 0);
+        result = 31 * result + (int) (publicationDate ^ (publicationDate >>> 32));
+        result = 31 * result + (isNew ? 1 : 0);
+        result = 31 * result + (isFavourite ? 1 : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return "Article{" +
                 "id=" + id +
