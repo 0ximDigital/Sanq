@@ -9,14 +9,14 @@ import io.reactivex.Flowable;
 import oxim.digital.sanq.data.feed.converter.ModelConverter;
 import oxim.digital.sanq.data.feed.db.dao.ArticleDao;
 import oxim.digital.sanq.data.feed.service.model.ApiArticle;
-import oxim.digital.sanq.data.reactive.BaseObservableDataSource;
+import oxim.digital.sanq.data.reactive.ObservableDataSource;
 import oxim.digital.sanq.domain.model.Article;
 
-public final class ArticleCrudder extends BaseObservableDataSource<ArticleDao> {
+public final class ArticleCrudder extends ObservableDataSource<ArticleDao> {
 
     private final ModelConverter modelConverter;
 
-    public ArticleCrudder(final ModelConverter modelConverter, final ArticleDao articleDao) {
+    public ArticleCrudder(final ArticleDao articleDao, final ModelConverter modelConverter) {
         super(articleDao);
         this.modelConverter = modelConverter;
     }
@@ -48,7 +48,7 @@ public final class ArticleCrudder extends BaseObservableDataSource<ArticleDao> {
     }
 
     public Completable favouriteArticle(int articleId) {
-        return command((articleDao -> articleDao.favouriteArticle(articleId));
+        return command(articleDao -> articleDao.favouriteArticle(articleId));
     }
 
     public Completable unfavouriteArticle(int articleId) {
