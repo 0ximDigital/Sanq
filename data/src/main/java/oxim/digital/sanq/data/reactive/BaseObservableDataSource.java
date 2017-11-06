@@ -14,12 +14,15 @@ import java.util.concurrent.Callable;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Scheduler;
-import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
-public abstract class BaseObservableDataSource implements ObservableDataSource {
+public abstract class BaseObservableDataSource<DataSource> implements ObservableDataSource {
 
     private static final int LAST_ITEM = 1;
+
+    private final DataSource dataSource;
 
     private final Scheduler backgroundScheduler;
 
@@ -28,11 +31,12 @@ public abstract class BaseObservableDataSource implements ObservableDataSource {
 
     private final List<DataSourceInvalidationObserver> dataSourceInvalidationObservers = new LinkedList<>();
 
-    public BaseObservableDataSource() {
-        this(Schedulers.io());
+    public BaseObservableDataSource(final DataSource dataSource) {
+        this(dataSource, Schedulers.io());
     }
 
-    public BaseObservableDataSource(final Scheduler backgroundScheduler) {
+    public BaseObservableDataSource(final DataSource dataSource, final Scheduler backgroundScheduler) {
+        this.dataSource = dataSource;
         this.backgroundScheduler = backgroundScheduler;
     }
 
@@ -48,8 +52,8 @@ public abstract class BaseObservableDataSource implements ObservableDataSource {
         Log.w("WAT", "Observer count -> " + dataSourceInvalidationObservers.size());
     }
 
-    protected Completable command(final Action commandAction) {
-        return Completable.fromAction(commandAction)
+    protected Completable command(final Consumer<DataSource> commandAction) {
+        return Completable.fromAction(() -> commandAction.accept(dataSource))
                           .andThen(notifySourceInvalidated());
     }
 
@@ -59,11 +63,11 @@ public abstract class BaseObservableDataSource implements ObservableDataSource {
                           .subscribeOn(backgroundScheduler);
     }
 
-    protected <T> Flowable<T> query(final Callable<T> callable) {
-        return Flowable.defer(() -> RxModel.createFlowable(this, callable));
+    protected <T> Flowable<T> query(final Function<DataSource, Callable<T>> callable) {
+        return Flowable.defer(() -> RxModel.createFlowable(this, callable.apply(dataSource)));
     }
 
-    protected <T> Flowable<T> query(final Callable<T> callable, final int queryId) {
+    protected <T> Flowable<T> query(final Function<DataSource, Callable<T>> callable, final int queryId) {
         final Flowable<T> cachedDataFlowable = flowableMap.get(queryId);
         if (cachedDataFlowable != null) {
             return cachedDataFlowable;
