@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.annimon.stream.Stream;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +24,7 @@ public abstract class ObservableDataSource<DataSource> implements InvalidatingDa
     private static final int LAST_ITEM = 1;
 
     @SuppressLint("UseSparseArrays")
-    private final Map<Integer, Flowable> flowableMap = new HashMap<>();
+    private final Map<Class, Flowable> flowableMap = new HashMap<>();
     private final List<DataSourceInvalidationObserver> dataSourceInvalidationObservers = new LinkedList<>();
 
     private final Scheduler backgroundScheduler;
@@ -66,19 +67,20 @@ public abstract class ObservableDataSource<DataSource> implements InvalidatingDa
         return Flowable.defer(() -> RxModel.createFlowable(this, dataQueryProvider.apply(dataSource)));
     }
 
-    protected <T> Flowable<T> query(final Function<DataSource, Callable<T>> dataQueryProvider, final int queryId) {
-        final Flowable<T> cachedDataFlowable = flowableMap.get(queryId);
+    protected <T> Flowable<T> query(final Function<DataSource, Callable<T>> dataQueryProvider, final Class<T> clazz) {
+        final Flowable<T> cachedDataFlowable = flowableMap.get(clazz);
         if (cachedDataFlowable != null) {
             return cachedDataFlowable;
         }
 
         final Flowable<T> dataFlowable = this.query(dataQueryProvider)
-                                             .doOnCancel(() -> flowableMap.remove(queryId))
+                                             .doOnCancel(() -> flowableMap.remove(clazz))
                                              .distinctUntilChanged()
                                              .replay(LAST_ITEM)
                                              .refCount()
                                              .subscribeOn(backgroundScheduler);
-        flowableMap.put(queryId, dataFlowable);
+
+        flowableMap.put(clazz, dataFlowable);
 
         return dataFlowable;
     }
