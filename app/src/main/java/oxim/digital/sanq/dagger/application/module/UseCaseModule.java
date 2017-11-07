@@ -4,8 +4,8 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import oxim.digital.sanq.domain.interactor.GetUserSubscriptionFeedsUseCase;
-import oxim.digital.sanq.domain.interactor.SubscribeUserToFeedUseCase;
+import oxim.digital.sanq.domain.interactor.feed.GetUserSubscriptionFeedsUseCase;
+import oxim.digital.sanq.domain.interactor.feed.SubscribeUserToFeedUseCase;
 import oxim.digital.sanq.domain.repository.FeedRepository;
 
 @Module

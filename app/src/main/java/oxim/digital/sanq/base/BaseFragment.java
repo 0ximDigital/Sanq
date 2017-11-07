@@ -25,6 +25,12 @@ public abstract class BaseFragment extends DaggerFragment implements BaseView, B
     }
 
     @Override
+    public void onDestroy() {
+        getPresenter().destroy();
+        super.onDestroy();
+    }
+
+    @Override
     public boolean onBack() {
         getPresenter().back();
         return true;

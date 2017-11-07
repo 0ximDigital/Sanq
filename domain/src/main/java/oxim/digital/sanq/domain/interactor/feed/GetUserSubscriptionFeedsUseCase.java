@@ -1,13 +1,11 @@
-package oxim.digital.sanq.domain.interactor;
-
-import java.util.List;
+package oxim.digital.sanq.domain.interactor.feed;
 
 import io.reactivex.Flowable;
 import oxim.digital.sanq.domain.interactor.type.QueryUseCase;
-import oxim.digital.sanq.domain.model.Feed;
+import oxim.digital.sanq.domain.model.feed.UserFeeds;
 import oxim.digital.sanq.domain.repository.FeedRepository;
 
-public final class GetUserSubscriptionFeedsUseCase implements QueryUseCase<List<Feed>> {
+public final class GetUserSubscriptionFeedsUseCase implements QueryUseCase<UserFeeds> {
 
     private final FeedRepository feedRepository;
 
@@ -16,7 +14,7 @@ public final class GetUserSubscriptionFeedsUseCase implements QueryUseCase<List<
     }
 
     @Override
-    public Flowable<List<Feed>> execute() {
+    public Flowable<UserFeeds> execute() {
         return feedRepository.getUserFeeds();
     }
 }

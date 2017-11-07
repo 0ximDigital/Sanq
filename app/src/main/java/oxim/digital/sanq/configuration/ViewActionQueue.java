@@ -3,15 +3,15 @@ package oxim.digital.sanq.configuration;
 import io.reactivex.Flowable;
 import io.reactivex.functions.Consumer;
 
-public interface ViewConsumerQueue<View> {
+public interface ViewActionQueue<View> {
 
     void resume();
 
-    void enqueueViewConsumer(Consumer<View> viewConsumer);
+    void enqueueViewAction(Consumer<View> viewAction);
 
     void pause();
 
     void destroy();
 
-    Flowable<Consumer<View>> viewConsumersFlowable();
+    Flowable<Consumer<View>> viewActions();
 }

@@ -1,4 +1,4 @@
-package oxim.digital.sanq.domain.interactor;
+package oxim.digital.sanq.domain.interactor.feed;
 
 import io.reactivex.Completable;
 import oxim.digital.sanq.domain.interactor.type.CommandUseCaseWithParams;

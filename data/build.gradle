@@ -46,10 +46,12 @@ dependencies {
 
     compile 'com.annimon:stream:' + project.ext.streamsWrapperVersion
 
-    implementation "android.arch.persistence.room:runtime:1.0.0-alpha9-1"
-    annotationProcessor "android.arch.persistence.room:compiler:1.0.0-alpha9-1"
-    implementation "android.arch.persistence.room:rxjava2:1.0.0-alpha9-1"
+    implementation "android.arch.persistence.room:runtime:1.0.0"
+    annotationProcessor "android.arch.persistence.room:compiler:1.0.0"
+    implementation "android.arch.persistence.room:rxjava2:1.0.0"
 
     compile 'io.reactivex.rxjava2:rxandroid:' + project.ext.rxAndroidVersion
     compile 'io.reactivex.rxjava2:rxjava:' + project.ext.rxJavaVersion
+
+    compile 'com.einmalfel:earl:1.2.0'
 }

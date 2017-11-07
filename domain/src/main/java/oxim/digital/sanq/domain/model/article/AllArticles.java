@@ -1,4 +1,4 @@
-package oxim.digital.sanq.domain.model;
+package oxim.digital.sanq.domain.model.article;
 
 import java.util.List;
 

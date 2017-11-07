@@ -7,8 +7,6 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
-import oxim.digital.sanq.configuration.ViewConsumerQueueFactory;
-import oxim.digital.sanq.configuration.ViewConsumerQueueFactoryImpl;
 import oxim.digital.sanq.dagger.application.ForApplication;
 import oxim.digital.sanq.dagger.application.SanqApplication;
 
@@ -36,12 +34,6 @@ public final class ApplicationModule {
 
     @Provides
     @Singleton
-    ViewConsumerQueueFactory provideViewConsumerQueueFactory() {
-        return new ViewConsumerQueueFactoryImpl();
-    }
-
-    @Provides
-    @Singleton
     Resources provideResources() {
         return sanqApplication.getResources();
     }
@@ -52,8 +44,6 @@ public final class ApplicationModule {
 
         @ForApplication
         Context context();
-
-        ViewConsumerQueueFactory viewActionQueueProvider();
 
         Resources resources();
     }

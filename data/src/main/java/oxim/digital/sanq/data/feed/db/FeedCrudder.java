@@ -6,8 +6,8 @@ import io.reactivex.Completable;
 import io.reactivex.Single;
 import oxim.digital.sanq.data.feed.service.model.ApiArticle;
 import oxim.digital.sanq.data.feed.service.model.ApiFeed;
-import oxim.digital.sanq.domain.model.Article;
-import oxim.digital.sanq.domain.model.Feed;
+import oxim.digital.sanq.domain.model.article.Article;
+import oxim.digital.sanq.domain.model.feed.Feed;
 
 public interface FeedCrudder {
 

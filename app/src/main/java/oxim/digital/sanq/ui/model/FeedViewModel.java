@@ -2,9 +2,9 @@ package oxim.digital.sanq.ui.model;
 
 public final class FeedViewModel {
 
-    public static final FeedViewModel EMPTY = new FeedViewModel(0, "", "", "", "");
+    public static final FeedViewModel EMPTY = new FeedViewModel("", "", "", "", "");
 
-    public final int id;
+    public final String id;
     public final String title;
     public final String imageUrl;
     public final String link;
@@ -12,7 +12,7 @@ public final class FeedViewModel {
 
     public final boolean isSelected;
 
-    public FeedViewModel(final int id, final String title, final String imageUrl, final String link, final String description, final boolean isSelected) {
+    public FeedViewModel(final String id, final String title, final String imageUrl, final String link, final String description, final boolean isSelected) {
         this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
@@ -21,7 +21,7 @@ public final class FeedViewModel {
         this.isSelected = isSelected;
     }
 
-    public FeedViewModel(final int id, final String title, final String imageUrl, final String link, final String description) {
+    public FeedViewModel(final String id, final String title, final String imageUrl, final String link, final String description) {
         this(id, title, imageUrl, link, description, false);
     }
 
@@ -40,12 +40,17 @@ public final class FeedViewModel {
 
         final FeedViewModel that = (FeedViewModel) o;
 
-        return id == that.id;
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        return link != null ? link.equals(that.link) : that.link == null;
     }
 
     @Override
     public int hashCode() {
-        return id;
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (link != null ? link.hashCode() : 0);
+        return result;
     }
 
     @Override

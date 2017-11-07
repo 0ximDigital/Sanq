@@ -8,12 +8,13 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.processors.PublishProcessor;
 
-public final class ViewConsumerQueueImpl<View> implements ViewConsumerQueue<View> {
+// TODO - Lifecycle component ?
+public final class ViewActionQueueImpl<View> implements ViewActionQueue<View> {
 
-    private final LinkedList<Consumer<View>> viewConsumers = new LinkedList<>();
+    private final LinkedList<Consumer<View>> viewActions = new LinkedList<>();
     private final Object queueLock = new Object();
 
-    private final PublishProcessor<Consumer<View>> viewConsumerProcessor = PublishProcessor.create();
+    private final PublishProcessor<Consumer<View>> viewActionsProcessor = PublishProcessor.create();
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private boolean isPaused = true;
@@ -26,23 +27,23 @@ public final class ViewConsumerQueueImpl<View> implements ViewConsumerQueue<View
 
     private void consumeQueue() {
         synchronized (queueLock) {
-            final Iterator<Consumer<View>> consumersIterator = viewConsumers.iterator();
+            final Iterator<Consumer<View>> consumersIterator = viewActions.iterator();
             while (consumersIterator.hasNext()) {
                 final Consumer<View> pendingViewAction = consumersIterator.next();
-                viewConsumerProcessor.onNext(pendingViewAction);
+                viewActionsProcessor.onNext(pendingViewAction);
                 consumersIterator.remove();
             }
         }
     }
 
     @Override
-    public void enqueueViewConsumer(final Consumer<View> viewConsumer) {
+    public void enqueueViewAction(final Consumer<View> viewConsumer) {
         if (isPaused) {
             synchronized (queueLock) {
-                viewConsumers.add(viewConsumer);
+                viewActions.add(viewConsumer);
             }
         } else {
-            viewConsumerProcessor.onNext(viewConsumer);
+            viewActionsProcessor.onNext(viewConsumer);
         }
     }
 
@@ -54,11 +55,11 @@ public final class ViewConsumerQueueImpl<View> implements ViewConsumerQueue<View
     @Override
     public void destroy() {
         disposables.clear();
-        viewConsumerProcessor.onComplete();
+        viewActionsProcessor.onComplete();
     }
 
     @Override
-    public Flowable<Consumer<View>> viewConsumersFlowable() {
-        return viewConsumerProcessor;
+    public Flowable<Consumer<View>> viewActions() {
+        return viewActionsProcessor;
     }
 }

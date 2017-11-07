@@ -11,6 +11,8 @@ public interface UserSubscriptionsContract {
     interface View extends BaseView {
 
         void showFeedSubscriptions(List<FeedViewModel> feedSubscriptions);
+
+        void showMessage(String message);
     }
 
     interface Presenter extends ScopedPresenter {
