@@ -19,7 +19,8 @@ public class ActivityPresenterModule {
     @Provides
     @ActivityScope
     HomeContract.Presenter provideHomePresenter() {
-        final HomePresenter presenter = new HomePresenter((HomeContract.View) activity);
+        final HomeContract.View view = (HomeContract.View) activity;
+        final HomePresenter presenter = new HomePresenter(view, view.provideViewState());
         activity.getActivityComponent().inject(presenter);
         return presenter;
     }

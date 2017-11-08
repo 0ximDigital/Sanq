@@ -1,5 +1,6 @@
 package oxim.digital.sanq.ui.feed.subscription;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -42,6 +43,9 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     @BindView(R.id.empty_state_view)
     FrameLayout emptyStateView;
 
+    @BindView(R.id.loading_indicator)
+    View loadingIndicator;
+
     private FeedAdapter feedAdapter;
 
     private Unbinder unbinder = Unbinder.EMPTY;
@@ -50,6 +54,11 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     public static UserSubscriptionsFragment newInstance() {
         return new UserSubscriptionsFragment();
+    }
+
+    @Override
+    public UserSubscriptionsViewModel provideViewState() {
+        return ViewModelProviders.of(this).get(UserSubscriptionsViewModel.class);
     }
 
     @Override
@@ -74,6 +83,21 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initializeRecyclerView();
+        observeViewState();
+    }
+
+    // This cold be moved to the base view with state passed?
+    private void observeViewState() {
+        final UserSubscriptionsViewModel viewModel = provideViewState();
+        addDisposable(viewModel.feedViewModels()
+                               .subscribe(this::showFeedSubscriptions));
+
+        addDisposable(viewModel.isLoading()
+                               .subscribe(this::showIsLoading));
+    }
+
+    private void showIsLoading(final boolean isLoading) {
+        loadingIndicator.setVisibility(isLoading ? View.VISIBLE : View.GONE);
     }
 
     private void initializeRecyclerView() {
@@ -112,6 +136,7 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     @Override
     public void onDestroyView() {
         unbinder.unbind();
+        // do not observe view state anymore
         super.onDestroyView();
     }
 }

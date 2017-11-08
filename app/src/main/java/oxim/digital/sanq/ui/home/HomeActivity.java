@@ -1,5 +1,6 @@
 package oxim.digital.sanq.ui.home;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 
 import javax.inject.Inject;
@@ -28,5 +29,10 @@ public class HomeActivity extends BaseActivity implements HomeContract.View {
     @Override
     protected ScopedPresenter getPresenter() {
         return presenter;
+    }
+
+    @Override
+    public HomeViewModel provideViewState() {
+        return ViewModelProviders.of(this).get(HomeViewModel.class);
     }
 }

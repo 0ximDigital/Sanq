@@ -14,12 +14,10 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.internal.functions.Functions;
-import oxim.digital.sanq.configuration.ViewActionQueue;
-import oxim.digital.sanq.configuration.ViewActionQueueImpl;
 import oxim.digital.sanq.dagger.application.module.ThreadingModule;
 import oxim.digital.sanq.router.Router;
 
-public abstract class BasePresenter<View extends BaseView> implements ScopedPresenter {
+public abstract class BasePresenter<View extends BaseView, State extends ViewState> implements ScopedPresenter {
 
     @Inject
     @Named(ThreadingModule.MAIN_SCHEDULER)
@@ -33,44 +31,25 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
     protected Router router;
 
     private final View view;
-    private ViewActionQueue<View> viewActionQueue;
+    private final State viewState;
 
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    public BasePresenter(final View view) {
+    public BasePresenter(final View view, final State viewState) {
         this.view = view;
+        this.viewState = viewState;
     }
 
     @Override
     @CallSuper
     public void start() {
-        this.viewActionQueue = new ViewActionQueueImpl<>(); // TODO - inject or inject factory
-
-        addDisposable(viewActionQueue.viewActions()
-                                     .observeOn(observeScheduler)
-                                     .subscribe(this::onViewAction, this::logError));
-    }
-
-    private void onViewAction(final Consumer<View> viewAction) throws Exception {
-        viewAction.accept(view);
-    }
-
-    @Override
-    public final void activate() {
-        viewActionQueue.resume();
-    }
-
-    @Override
-    @CallSuper
-    public final void deactivate() {
-        viewActionQueue.pause();
+        // Template
     }
 
     @Override
     @CallSuper
     public void destroy() {
         disposables.clear();
-        viewActionQueue.destroy();
     }
 
     @Override
@@ -78,7 +57,7 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         router.goBack();
     }
 
-    public void query(final Flowable<Consumer<View>> flowable) {
+    public void query(final Flowable<Consumer<State>> flowable) {
         buildQuery(flowable).assemble();
     }
 
@@ -86,7 +65,7 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         buildCommand(completable).assemble();
     }
 
-    public QueryBuilder buildQuery(final Flowable<Consumer<View>> flowable) {
+    public QueryBuilder buildQuery(final Flowable<Consumer<State>> flowable) {
         return new QueryBuilder(flowable);
     }
 
@@ -98,8 +77,8 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         disposables.add(disposable);
     }
 
-    protected void runViewAction(final Consumer<View> viewAction) {
-        viewActionQueue.enqueueViewAction(viewAction);
+    protected void runViewAction(final Consumer<State> viewStateAction) throws Exception {
+        viewStateAction.accept(viewState);
     }
 
     public final void logError(final Throwable throwable) {
@@ -111,13 +90,13 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
 
     protected final class QueryBuilder {
 
-        private Flowable<Consumer<View>> flowable;
+        private Flowable<Consumer<State>> flowable;
         private Completable completable;
 
         private Consumer<Throwable> errorAction = BasePresenter.this::logError;
-        private Consumer<View> completionAction;
+        private Consumer<State> completionAction;
 
-        public QueryBuilder(final Flowable<Consumer<View>> flowable) {
+        public QueryBuilder(final Flowable<Consumer<State>> flowable) {
             this.flowable = flowable;
         }
 
@@ -125,7 +104,7 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
             this.completable = completable;
         }
 
-        public QueryBuilder flowable(final Flowable<Consumer<View>> flowable) {
+        public QueryBuilder flowable(final Flowable<Consumer<State>> flowable) {
             this.flowable = flowable;
             return this;
         }
@@ -140,7 +119,7 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
             return this;
         }
 
-        public QueryBuilder onCompleted(final Consumer<View> completionAction) {
+        public QueryBuilder onCompleted(final Consumer<State> completionAction) {
             this.completionAction = completionAction;
             return this;
         }
@@ -158,13 +137,13 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
                     .observeOn(observeScheduler)
                     .subscribe(BasePresenter.this::runViewAction,
                                errorAction,
-                               completionAction != null ? () -> completionAction.accept(view) : Functions.EMPTY_ACTION);
+                               completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION);
         }
 
         private Disposable assembleCompletable() {
             return completable
                     .observeOn(observeScheduler)
-                    .subscribe(completionAction != null ? () -> completionAction.accept(view) : Functions.EMPTY_ACTION,
+                    .subscribe(completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION,
                                errorAction);
         }
     }
