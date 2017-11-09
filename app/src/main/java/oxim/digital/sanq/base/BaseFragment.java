@@ -13,7 +13,6 @@ public abstract class BaseFragment extends DaggerFragment implements BaseView, B
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getPresenter().start();
     }
 
     protected void addDisposable(final Disposable disposable) {
@@ -27,16 +26,10 @@ public abstract class BaseFragment extends DaggerFragment implements BaseView, B
     }
 
     @Override
-    public void onDestroy() {
-        getPresenter().destroy();
-        super.onDestroy();
-    }
-
-    @Override
     public boolean onBack() {
         getPresenter().back();
         return true;
     }
 
-    public abstract ScopedPresenter getPresenter();
+    public abstract ViewPresenter getPresenter();
 }

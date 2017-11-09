@@ -1,6 +1,5 @@
 package oxim.digital.sanq.ui.feed.subscription;
 
-import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -9,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -22,7 +20,7 @@ import butterknife.Unbinder;
 import io.reactivex.disposables.CompositeDisposable;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
-import oxim.digital.sanq.base.ScopedPresenter;
+import oxim.digital.sanq.base.ViewPresenter;
 import oxim.digital.sanq.dagger.fragment.FragmentComponent;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 import oxim.digital.sanq.util.ImageLoader;
@@ -57,17 +55,12 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
     }
 
     @Override
-    public UserSubscriptionsViewModel provideViewState() {
-        return ViewModelProviders.of(this).get(UserSubscriptionsViewModel.class);
-    }
-
-    @Override
     protected void inject(final FragmentComponent fragmentComponent) {
         fragmentComponent.inject(this);
     }
 
     @Override
-    public ScopedPresenter getPresenter() {
+    public ViewPresenter getPresenter() {
         return presenter;
     }
 
@@ -86,14 +79,14 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         observeViewState();
     }
 
-    // This cold be moved to the base view with state passed?
     private void observeViewState() {
-        final UserSubscriptionsViewModel viewModel = provideViewState();
-        addDisposable(viewModel.feedViewModels()
-                               .subscribe(this::showFeedSubscriptions));
+        addDisposable(presenter.viewState()
+                               .subscribe(this::onViewState));
+    }
 
-        addDisposable(viewModel.isLoading()
-                               .subscribe(this::showIsLoading));
+    private void onViewState(final UserSubscriptionsViewModel userSubscriptionsViewModel) {
+        showIsLoading(userSubscriptionsViewModel.isLoading());
+        showFeedSubscriptions(userSubscriptionsViewModel.getFeedViewModels());
     }
 
     private void showIsLoading(final boolean isLoading) {
@@ -113,15 +106,9 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         super.onPause();
     }
 
-    @Override
     public void showFeedSubscriptions(final List<FeedViewModel> feedSubscriptions) {
         feedAdapter.onFeedsUpdate(feedSubscriptions);
         adjustEmptyState(feedSubscriptions.isEmpty());
-    }
-
-    @Override
-    public void showMessage(final String message) {
-        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     private void adjustEmptyState(final boolean isViewEmpty) {

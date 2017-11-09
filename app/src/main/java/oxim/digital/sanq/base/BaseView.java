@@ -1,6 +1,5 @@
 package oxim.digital.sanq.base;
 
-public interface BaseView<ViewState> {
+public interface BaseView {
 
-    ViewState provideViewState();
 }

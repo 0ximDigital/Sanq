@@ -1,7 +1,6 @@
 package oxim.digital.sanq.ui.feed.subscription;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -13,7 +12,7 @@ import oxim.digital.sanq.domain.interactor.feed.SubscribeUserToFeedUseCase;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 import oxim.digital.sanq.ui.model.mapper.FeedViewModeMapper;
 
-public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscriptionsContract.View, UserSubscriptionsViewModel> implements UserSubscriptionsContract.Presenter {
+public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscriptionsViewModel> implements UserSubscriptionsContract.Presenter {
 
     @Inject
     GetUserSubscriptionFeedsUseCase getUserSubscriptionFeedsUseCase;
@@ -24,8 +23,9 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
     @Inject
     FeedViewModeMapper feedViewModeMapper;
 
-    public UserSubscriptionsPresenter(final UserSubscriptionsContract.View view, final UserSubscriptionsViewModel viewState) {
-        super(view, viewState);
+    @Override
+    protected UserSubscriptionsViewModel initialViewState() {
+        return new UserSubscriptionsViewModel();
     }
 
     @Override
@@ -48,17 +48,15 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
 
     @Override
     public void subscribeToTheNewFeed(final String feedUrl) {
-        buildCommand(Completable.timer(4, TimeUnit.SECONDS)
-                                .andThen(subscribeUserToFeedUseCase.execute(feedUrl))
-                                .startWith(Completable.fromAction(() -> runViewAction(viewState -> viewState.setIsLoading(true))))
-                                .doOnTerminate(() -> runViewAction(viewState -> viewState.setIsLoading(false)))
-                                .subscribeOn(backgroundScheduler))
-                .onError(this::onNewFeedError)
-                .subscribe();
+        addDisposable(buildCommand(subscribeUserToFeedUseCase.execute(feedUrl)
+                                                             .startWith(Completable.fromAction(() -> viewStateAction(viewState -> viewState.setLoading(true))))
+                                                             .doOnTerminate(() -> viewStateAction(viewState -> viewState.setLoading(false)))
+                                                             .subscribeOn(backgroundScheduler))
+                              .onError(this::onNewFeedError)
+                              .subscribe());
     }
 
     private void onNewFeedError(final Throwable throwable) {
-        logError(throwable);
-        buildCommand(Completable.fromAction(() -> runViewAction(viewState -> viewState.setMessage("Invalid feed"))));
+        viewStateAction(viewState -> viewState.setLoading(false));
     }
 }

@@ -20,7 +20,6 @@ public abstract class BaseActivity extends DaggerActivity {
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getPresenter().start();
     }
 
     @Override
@@ -30,11 +29,5 @@ public abstract class BaseActivity extends DaggerActivity {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        getPresenter().destroy();
-        super.onDestroy();
-    }
-
-    protected abstract ScopedPresenter getPresenter();
+    protected abstract ViewPresenter getPresenter();
 }
