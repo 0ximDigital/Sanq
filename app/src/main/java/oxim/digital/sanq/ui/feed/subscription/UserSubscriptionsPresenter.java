@@ -48,15 +48,9 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
 
     @Override
     public void subscribeToTheNewFeed(final String feedUrl) {
-        addDisposable(buildCommand(subscribeUserToFeedUseCase.execute(feedUrl)
-                                                             .startWith(Completable.fromAction(() -> viewStateAction(viewState -> viewState.setLoading(true))))
-                                                             .doOnTerminate(() -> viewStateAction(viewState -> viewState.setLoading(false)))
-                                                             .subscribeOn(backgroundScheduler))
-                              .onError(this::onNewFeedError)
-                              .subscribe());
-    }
-
-    private void onNewFeedError(final Throwable throwable) {
-        viewStateAction(viewState -> viewState.setLoading(false));
+        runCommand(subscribeUserToFeedUseCase.execute(feedUrl)
+                                             .startWith(Completable.fromAction(() -> viewStateAction(viewState -> viewState.setLoading(true))))
+                                             .doOnEvent(ignore -> viewStateAction(viewState -> viewState.setLoading(false)))
+                                             .subscribeOn(backgroundScheduler));
     }
 }
