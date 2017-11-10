@@ -14,10 +14,12 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.internal.functions.Functions;
+import io.reactivex.processors.BehaviorProcessor;
+import io.reactivex.processors.FlowableProcessor;
 import oxim.digital.sanq.dagger.application.module.ThreadingModule;
 import oxim.digital.sanq.router.Router;
 
-public abstract class BasePresenter<View extends BaseView, State extends ViewState> implements ScopedPresenter {
+public abstract class BasePresenter<ViewState> implements ViewPresenter<ViewState> {
 
     @Inject
     @Named(ThreadingModule.MAIN_SCHEDULER)
@@ -30,20 +32,27 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
     @Inject
     protected Router router;
 
-    private final View view;
-    private final State viewState;
+    private final FlowableProcessor<ViewState> viewStateFlowable = BehaviorProcessor.<ViewState> create().toSerialized();
 
+    private ViewState viewState;
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    public BasePresenter(final View view, final State viewState) {
-        this.view = view;
-        this.viewState = viewState;
+    public BasePresenter() {
+        viewState = initialViewState();
+        viewStateFlowable.onNext(viewState);
     }
+
+    protected abstract ViewState initialViewState();
 
     @Override
     @CallSuper
     public void start() {
         // Template
+    }
+
+    @Override
+    public Flowable<ViewState> viewState() {
+        return viewStateFlowable.distinct().observeOn(observeScheduler);
     }
 
     @Override
@@ -57,7 +66,7 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
         router.goBack();
     }
 
-    public void query(final Flowable<Consumer<State>> flowable) {
+    public void query(final Flowable<Consumer<ViewState>> flowable) {
         buildQuery(flowable).assemble();
     }
 
@@ -65,7 +74,7 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
         buildCommand(completable).assemble();
     }
 
-    public QueryBuilder buildQuery(final Flowable<Consumer<State>> flowable) {
+    public QueryBuilder buildQuery(final Flowable<Consumer<ViewState>> flowable) {
         return new QueryBuilder(flowable);
     }
 
@@ -73,12 +82,17 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
         return new QueryBuilder(completable);
     }
 
-    private void addDisposable(final Disposable disposable) {
+    protected void addDisposable(final Disposable disposable) {
         disposables.add(disposable);
     }
 
-    protected void runViewAction(final Consumer<State> viewStateAction) throws Exception {
-        viewStateAction.accept(viewState);
+    protected void viewStateAction(final Consumer<ViewState> viewStateAction) {
+        try {
+            viewStateAction.accept(viewState);
+            viewStateFlowable.onNext(viewState);
+        } catch (final Exception e) {
+            logError(e);
+        }
     }
 
     public final void logError(final Throwable throwable) {
@@ -90,13 +104,13 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
 
     protected final class QueryBuilder {
 
-        private Flowable<Consumer<State>> flowable;
+        private Flowable<Consumer<ViewState>> flowable;
         private Completable completable;
 
         private Consumer<Throwable> errorAction = BasePresenter.this::logError;
-        private Consumer<State> completionAction;
+        private Consumer<ViewState> completionAction = viewStateFlowable::onNext;
 
-        public QueryBuilder(final Flowable<Consumer<State>> flowable) {
+        public QueryBuilder(final Flowable<Consumer<ViewState>> flowable) {
             this.flowable = flowable;
         }
 
@@ -104,7 +118,7 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
             this.completable = completable;
         }
 
-        public QueryBuilder flowable(final Flowable<Consumer<State>> flowable) {
+        public QueryBuilder flowable(final Flowable<Consumer<ViewState>> flowable) {
             this.flowable = flowable;
             return this;
         }
@@ -115,12 +129,12 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
         }
 
         public QueryBuilder onError(final Consumer<Throwable> errorAction) {
-            this.errorAction = errorAction;
+            this.errorAction = new ChainedConsumer<>(this.errorAction, errorAction);
             return this;
         }
 
-        public QueryBuilder onCompleted(final Consumer<State> completionAction) {
-            this.completionAction = completionAction;
+        public QueryBuilder onCompleted(final Consumer<ViewState> completionAction) {
+            this.completionAction = new ChainedConsumer<>(this.completionAction, completionAction);
             return this;
         }
 
@@ -135,7 +149,7 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
         private Disposable assembleFlowable() {
             return flowable
                     .observeOn(observeScheduler)
-                    .subscribe(BasePresenter.this::runViewAction,
+                    .subscribe(BasePresenter.this::viewStateAction,
                                errorAction,
                                completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION);
         }
@@ -145,6 +159,23 @@ public abstract class BasePresenter<View extends BaseView, State extends ViewSta
                     .observeOn(observeScheduler)
                     .subscribe(completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION,
                                errorAction);
+        }
+    }
+
+    private static final class ChainedConsumer<T> implements Consumer<T> {
+
+        private final Consumer<T> actual;
+        private final Consumer<T> next;
+
+        public ChainedConsumer(final Consumer<T> actual, final Consumer<T> next) {
+            this.actual = actual;
+            this.next = next;
+        }
+
+        @Override
+        public void accept(final T t) throws Exception {
+            actual.accept(t);
+            next.accept(t);
         }
     }
 }

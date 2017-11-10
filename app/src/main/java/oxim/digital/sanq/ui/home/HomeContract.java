@@ -1,15 +1,15 @@
 package oxim.digital.sanq.ui.home;
 
 import oxim.digital.sanq.base.BaseView;
-import oxim.digital.sanq.base.ScopedPresenter;
+import oxim.digital.sanq.base.ViewPresenter;
 
 public interface HomeContract {
 
-    interface View extends BaseView<HomeViewModel> {
+    interface View extends BaseView {
 
     }
 
-    interface Presenter extends ScopedPresenter {
+    interface Presenter extends ViewPresenter<Object> {
 
     }
 }

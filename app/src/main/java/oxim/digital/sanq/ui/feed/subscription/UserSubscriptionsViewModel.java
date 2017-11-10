@@ -1,39 +1,52 @@
 package oxim.digital.sanq.ui.feed.subscription;
 
-import android.arch.lifecycle.ViewModel;
-
 import java.util.Collections;
 import java.util.List;
 
-import io.reactivex.Flowable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.processors.BehaviorProcessor;
-import io.reactivex.processors.FlowableProcessor;
-import oxim.digital.sanq.base.ViewState;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 
-public final class UserSubscriptionsViewModel extends ViewModel implements ViewState {
+public final class UserSubscriptionsViewModel {
 
-    private FlowableProcessor<List<FeedViewModel>> feedViewModelsProcessor = BehaviorProcessor.<List<FeedViewModel>> createDefault(Collections.emptyList()).toSerialized();
-    private FlowableProcessor<Boolean> isLoadingProcessor = BehaviorProcessor.createDefault(false).toSerialized();
+    private List<FeedViewModel> feedViewModels = Collections.emptyList();
+    private boolean isLoading;
 
-    public void setFeedViewModels(final List<FeedViewModel> viewModels) {
-        feedViewModelsProcessor.onNext(viewModels);
+    public List<FeedViewModel> getFeedViewModels() {
+        return feedViewModels;
     }
 
-    public Flowable<List<FeedViewModel>> feedViewModels() {
-        return feedViewModelsProcessor.observeOn(AndroidSchedulers.mainThread());
+    public void setFeedViewModels(final List<FeedViewModel> feedViewModels) {
+        this.feedViewModels = feedViewModels;
     }
 
-    public Flowable<Boolean> isLoading() {
-        return isLoadingProcessor.observeOn(AndroidSchedulers.mainThread());
+    public boolean isLoading() {
+        return isLoading;
     }
 
-    public void setIsLoading(final boolean isLoading) {
-        isLoadingProcessor.onNext(isLoading);
+    public void setLoading(final boolean loading) {
+        isLoading = loading;
     }
 
-    public void setMessage(final String message) {
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
+        final UserSubscriptionsViewModel that = (UserSubscriptionsViewModel) o;
+
+        if (isLoading != that.isLoading) {
+            return false;
+        }
+        return feedViewModels != null ? feedViewModels.equals(that.feedViewModels) : that.feedViewModels == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = feedViewModels != null ? feedViewModels.hashCode() : 0;
+        result = 31 * result + (isLoading ? 1 : 0);
+        return result;
     }
 }
