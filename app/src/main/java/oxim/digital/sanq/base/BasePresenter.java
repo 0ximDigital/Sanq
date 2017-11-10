@@ -35,9 +35,9 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
 
     private final FlowableProcessor<ViewState> viewStateFlowable = BehaviorProcessor.<ViewState> create().toSerialized();
 
-    private ViewState viewState;
-    private CompositeDisposable disposables = new CompositeDisposable();
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
+    private ViewState viewState;
     private Disposable viewObservingDisposable = Disposables.disposed();
 
     public BasePresenter() {

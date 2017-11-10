@@ -16,7 +16,7 @@ import oxim.digital.sanq.dagger.fragment.DaggerFragment;
 
 public abstract class BaseFragment extends DaggerFragment implements BaseView, BackPropagatingFragment {
 
-    private CompositeDisposable disposables = new CompositeDisposable();
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     private Unbinder unbinder = Unbinder.EMPTY;
 
