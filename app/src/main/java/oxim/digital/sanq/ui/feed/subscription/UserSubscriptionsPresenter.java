@@ -12,7 +12,7 @@ import oxim.digital.sanq.domain.interactor.feed.SubscribeUserToFeedUseCase;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 import oxim.digital.sanq.ui.model.mapper.FeedViewModeMapper;
 
-public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscriptionsViewModel> implements UserSubscriptionsContract.Presenter {
+public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscriptionsContract.View, UserSubscriptionsViewState> implements UserSubscriptionsContract.Presenter {
 
     @Inject
     GetUserSubscriptionFeedsUseCase getUserSubscriptionFeedsUseCase;
@@ -24,8 +24,8 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
     FeedViewModeMapper feedViewModeMapper;
 
     @Override
-    protected UserSubscriptionsViewModel initialViewState() {
-        return new UserSubscriptionsViewModel();
+    protected UserSubscriptionsViewState initialViewState() {
+        return new UserSubscriptionsViewState();
     }
 
     @Override
@@ -42,7 +42,7 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
                                              .map(this::toViewConsumer));
     }
 
-    private Consumer<UserSubscriptionsViewModel> toViewConsumer(final List<FeedViewModel> feedViewModels) {
+    private Consumer<UserSubscriptionsViewState> toViewConsumer(final List<FeedViewModel> feedViewModels) {
         return viseState -> viseState.setFeedViewModels(feedViewModels);
     }
 
@@ -50,7 +50,11 @@ public final class UserSubscriptionsPresenter extends BasePresenter<UserSubscrip
     public void subscribeToTheNewFeed(final String feedUrl) {
         runCommand(subscribeUserToFeedUseCase.execute(feedUrl)
                                              .startWith(Completable.fromAction(() -> viewStateAction(viewState -> viewState.setLoading(true))))
-                                             .doOnEvent(ignore -> viewStateAction(viewState -> viewState.setLoading(false)))
-                                             .subscribeOn(backgroundScheduler));
+                                             .doOnEvent(ignore -> viewStateAction(viewState -> viewState.setLoading(false))));
+    }
+
+    @Override
+    public void showNewFeedSubscriptionScreen() {
+        router.showAddNewFeedScreen();
     }
 }

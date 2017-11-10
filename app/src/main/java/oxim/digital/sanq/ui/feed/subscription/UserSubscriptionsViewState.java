@@ -5,7 +5,7 @@ import java.util.List;
 
 import oxim.digital.sanq.ui.model.FeedViewModel;
 
-public final class UserSubscriptionsViewModel {
+public final class UserSubscriptionsViewState {
 
     private List<FeedViewModel> feedViewModels = Collections.emptyList();
     private boolean isLoading;
@@ -35,7 +35,7 @@ public final class UserSubscriptionsViewModel {
             return false;
         }
 
-        final UserSubscriptionsViewModel that = (UserSubscriptionsViewModel) o;
+        final UserSubscriptionsViewState that = (UserSubscriptionsViewState) o;
 
         if (isLoading != that.isLoading) {
             return false;

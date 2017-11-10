@@ -12,6 +12,7 @@ import io.reactivex.Flowable;
 import io.reactivex.Scheduler;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
 import io.reactivex.functions.Consumer;
 import io.reactivex.internal.functions.Functions;
 import io.reactivex.processors.BehaviorProcessor;
@@ -19,7 +20,7 @@ import io.reactivex.processors.FlowableProcessor;
 import oxim.digital.sanq.dagger.application.module.ThreadingModule;
 import oxim.digital.sanq.router.Router;
 
-public abstract class BasePresenter<ViewState> implements ViewPresenter<ViewState> {
+public abstract class BasePresenter<View, ViewState> implements ViewPresenter<View, ViewState> {
 
     @Inject
     @Named(ThreadingModule.MAIN_SCHEDULER)
@@ -37,6 +38,8 @@ public abstract class BasePresenter<ViewState> implements ViewPresenter<ViewStat
     private ViewState viewState;
     private CompositeDisposable disposables = new CompositeDisposable();
 
+    private Disposable viewObservingDisposable = Disposables.disposed();
+
     public BasePresenter() {
         viewState = initialViewState();
         viewStateFlowable.onNext(viewState);
@@ -51,8 +54,27 @@ public abstract class BasePresenter<ViewState> implements ViewPresenter<ViewStat
     }
 
     @Override
+    public final void onViewAttached(final View view) {
+        viewObservingDisposable = observeView(view);
+    }
+
+    /**
+     * Override to observe view
+     *
+     * @return Disposable to be disposed when the view is gone
+     */
+    protected Disposable observeView(final View view) {
+        return Disposables.disposed();
+    }
+
+    @Override
     public Flowable<ViewState> viewState() {
-        return viewStateFlowable.distinct().observeOn(observeScheduler);
+        return viewStateFlowable.distinctUntilChanged(Object::hashCode).observeOn(observeScheduler);
+    }
+
+    @Override
+    public final void onViewDetached() {
+        viewObservingDisposable.dispose();
     }
 
     @Override
@@ -149,6 +171,7 @@ public abstract class BasePresenter<ViewState> implements ViewPresenter<ViewStat
         private Disposable assembleFlowable() {
             return flowable
                     .observeOn(observeScheduler)
+                    .subscribeOn(backgroundScheduler)
                     .subscribe(BasePresenter.this::viewStateAction,
                                errorAction,
                                completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION);
@@ -157,6 +180,7 @@ public abstract class BasePresenter<ViewState> implements ViewPresenter<ViewStat
         private Disposable assembleCompletable() {
             return completable
                     .observeOn(observeScheduler)
+                    .subscribeOn(backgroundScheduler)
                     .subscribe(completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION,
                                errorAction);
         }

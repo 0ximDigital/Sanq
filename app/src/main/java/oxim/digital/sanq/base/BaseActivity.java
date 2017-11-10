@@ -20,6 +20,13 @@ public abstract class BaseActivity extends DaggerActivity {
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getPresenter().onViewAttached(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        getPresenter().onViewDetached();
+        super.onDestroy();
     }
 
     @Override
