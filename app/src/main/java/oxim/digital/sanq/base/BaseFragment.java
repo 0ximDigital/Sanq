@@ -38,13 +38,17 @@ public abstract class BaseFragment extends DaggerFragment implements BaseView, B
     }
 
     protected void addDisposable(final Disposable disposable) {
+        if (disposables.isDisposed()) {
+            throw new UnsupportedOperationException("View disposables are disposed");
+        }
+
         disposables.add(disposable);
     }
 
     @Override
     public void onDestroyView() {
         getPresenter().onViewDetached();
-        disposables.clear();
+        disposables.dispose();
         unbinder.unbind();
         super.onDestroyView();
     }

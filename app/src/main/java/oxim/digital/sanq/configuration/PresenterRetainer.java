@@ -9,10 +9,17 @@ import oxim.digital.sanq.base.ViewPresenter;
 public final class PresenterRetainer extends ViewModel {
 
     private Optional<ViewPresenter> viewPresenter = Optional.empty();
+    private boolean isCleared;
 
     public void setViewPresenter(final ViewPresenter viewPresenter) {
-        this.viewPresenter.ifPresent(this::notifyError);
+        validateRetainer(viewPresenter);
         this.viewPresenter = Optional.of(viewPresenter);
+    }
+
+    private void validateRetainer(final ViewPresenter viewPresenter) {
+        if (isCleared || hasPresenter()) {
+            notifyError(viewPresenter);
+        }
     }
 
     public boolean hasPresenter() {
@@ -25,7 +32,9 @@ public final class PresenterRetainer extends ViewModel {
 
     @Override
     protected void onCleared() {
+        isCleared = true;
         viewPresenter.ifPresent(ViewPresenter::destroy);
+        viewPresenter = Optional.empty();
     }
 
     private void notifyError(final ViewPresenter viewPresenter) {

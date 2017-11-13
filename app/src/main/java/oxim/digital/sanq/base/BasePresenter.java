@@ -45,8 +45,14 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
         viewStateFlowable.onNext(viewState);
     }
 
+    /**
+     * @return Initial view state to be rendered
+     */
     protected abstract ViewState initialViewState();
 
+    /**
+     * Called only once when a presenter is created, after dependency injection
+     */
     @Override
     @CallSuper
     public void start() {
@@ -55,11 +61,13 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
 
     @Override
     public final void onViewAttached(final View view) {
+        // Check, it should be disposed
         viewObservingDisposable = observeView(view);
     }
 
     /**
-     * Override to observe view
+     * Override to observe view.
+     * Do not keep a direct reference to the passed view
      *
      * @return Disposable to be disposed when the view is gone
      */
@@ -77,6 +85,9 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
         viewObservingDisposable.dispose();
     }
 
+    /**
+     * Called only once, when a presenter is about to be destroyed
+     */
     @Override
     @CallSuper
     public void destroy() {
@@ -86,6 +97,20 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
     @Override
     public void back() {
         router.goBack();
+    }
+
+    /**
+     * Call this method to modify current view state
+     *
+     * @param viewStateAction to be called on the ViewState
+     */
+    protected void viewStateAction(final Consumer<ViewState> viewStateAction) {
+        try {
+            viewStateAction.accept(viewState);
+            viewStateFlowable.onNext(viewState);
+        } catch (final Exception e) {
+            logError(e);
+        }
     }
 
     public void query(final Flowable<Consumer<ViewState>> flowable) {
@@ -106,15 +131,6 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
 
     protected void addDisposable(final Disposable disposable) {
         disposables.add(disposable);
-    }
-
-    protected void viewStateAction(final Consumer<ViewState> viewStateAction) {
-        try {
-            viewStateAction.accept(viewState);
-            viewStateFlowable.onNext(viewState);
-        } catch (final Exception e) {
-            logError(e);
-        }
     }
 
     public final void logError(final Throwable throwable) {

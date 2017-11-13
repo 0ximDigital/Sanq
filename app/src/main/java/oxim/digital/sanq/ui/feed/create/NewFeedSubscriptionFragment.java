@@ -14,6 +14,8 @@ import butterknife.BindView;
 import butterknife.OnClick;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.disposables.Disposables;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
 import oxim.digital.sanq.base.ViewPresenter;
@@ -98,8 +100,13 @@ public final class NewFeedSubscriptionFragment extends BaseFragment implements N
 
     @Override
     public Flowable<NewFeedRequest> newFeedRequest() {
-        return Flowable.create(emitter -> feedUrlInput.addTextChangedListener(new ActionTextWatcher(changedText -> emitter.onNext(new NewFeedRequest(changedText.toString())))),
-                               BackpressureStrategy.LATEST);
+        return Flowable.create(this::notifyInputChanges, BackpressureStrategy.LATEST);
+    }
+
+    private void notifyInputChanges(final FlowableEmitter<NewFeedRequest> emitter) {
+        final ActionTextWatcher actionTextWatcher = new ActionTextWatcher(changedText -> emitter.onNext(new NewFeedRequest(changedText.toString())));
+        emitter.setDisposable(Disposables.fromAction(() -> feedUrlInput.removeTextChangedListener(actionTextWatcher)));
+        feedUrlInput.addTextChangedListener(actionTextWatcher);
     }
 
     @OnClick(R.id.add_feed_button)
