@@ -1,7 +1,6 @@
 package oxim.digital.sanq.ui.feed.create;
 
 import android.content.res.Resources;
-import android.util.Log;
 
 import javax.inject.Inject;
 
@@ -25,7 +24,6 @@ public final class NewFeedSubscriptionPresenter extends BasePresenter<NewFeedSub
 
     @Override
     protected Disposable observeView(final NewFeedSubscriptionContract.View view) {
-        Log.w("WAT", "New view attached, using router -> " + router);
         return view.newFeedRequest()
                    .subscribe(this::onNewFeedRequestData);
     }
@@ -40,20 +38,11 @@ public final class NewFeedSubscriptionPresenter extends BasePresenter<NewFeedSub
                                              .startWith(Completable.fromAction(() -> viewStateAction(newFeedViewState -> newFeedViewState.setLoading(true))))
                                              .doOnEvent(event -> viewStateAction(newFeedViewState -> newFeedViewState.setLoading(false)))
                                              .doOnError(this::showErrorMessage)
-                                             .doOnEvent(event -> {
-                                                 Log.w("WAT", "In event, using router -> " + router);
-                                             })
                                              .doOnComplete(this::back));
     }
 
     private void showErrorMessage(final Throwable throwable) {
         viewStateAction(newFeedViewState -> newFeedViewState.setMessage("Invalid feed"));
-    }
-
-    @Override
-    public void back() {
-        Log.w("WAT", "In back, using router -> " + router);
-        super.back();
     }
 }
 
