@@ -6,6 +6,8 @@ import com.annimon.stream.Optional;
 
 import oxim.digital.sanq.base.ViewPresenter;
 
+import static oxim.digital.sanq.domain.util.Conditions.throwIf;
+
 public final class PresenterRetainer extends ViewModel {
 
     private Optional<ViewPresenter> viewPresenter = Optional.empty();
@@ -17,9 +19,7 @@ public final class PresenterRetainer extends ViewModel {
     }
 
     private void validateRetainer(final ViewPresenter viewPresenter) {
-        if (isCleared || hasPresenter()) {
-            notifyError(viewPresenter);
-        }
+        throwIf((isCleared || hasPresenter()), () -> new IllegalStateException("Presenter retainer already has presenter " + viewPresenter));
     }
 
     public boolean hasPresenter() {
@@ -35,9 +35,5 @@ public final class PresenterRetainer extends ViewModel {
         isCleared = true;
         viewPresenter.ifPresent(ViewPresenter::destroy);
         viewPresenter = Optional.empty();
-    }
-
-    private void notifyError(final ViewPresenter viewPresenter) {
-        throw new IllegalStateException("Presenter retainer already has presenter " + viewPresenter);
     }
 }
