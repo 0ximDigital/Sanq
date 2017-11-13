@@ -18,8 +18,9 @@ import io.reactivex.internal.functions.Functions;
 import io.reactivex.processors.BehaviorProcessor;
 import io.reactivex.processors.FlowableProcessor;
 import oxim.digital.sanq.dagger.application.module.ThreadingModule;
-import oxim.digital.sanq.domain.util.Conditions;
 import oxim.digital.sanq.router.Router;
+
+import static oxim.digital.sanq.domain.util.Conditions.throwIf;
 
 public abstract class BasePresenter<View, ViewState> implements ViewPresenter<View, ViewState> {
 
@@ -62,7 +63,7 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
 
     @Override
     public final void onViewAttached(final View view) {
-        Conditions.throwIf(!viewObservingDisposable.isDisposed(), () -> new IllegalStateException("Another's view disposable is not disposed"));
+        throwIf(!viewObservingDisposable.isDisposed(), () -> new IllegalStateException("Another's view disposable is not disposed"));
 
         viewObservingDisposable = observeView(view);
     }
