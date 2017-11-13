@@ -95,27 +95,13 @@
         android:layout_margin="@dimen/small_margin"
         android:src="@drawable/ic_add"/>
 
-    <Button
-        android:id="@+id/test_insert_button"
-        android:layout_gravity="bottom"
-        android:text="insert"
+    <ProgressBar
+        android:id="@+id/loading_indicator"
+        style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/test_favourite_button"
-        android:layout_gravity="bottom"
-        android:text="favourite"
-        android:layout_marginBottom="48dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/test_unfavourite_button"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="96dp"
-        android:text="unfavourite"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        tools:visibility="visible"/>
 
 </FrameLayout>

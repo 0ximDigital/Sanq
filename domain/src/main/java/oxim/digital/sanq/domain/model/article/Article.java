@@ -1,9 +1,11 @@
-package oxim.digital.sanq.domain.model;
+package oxim.digital.sanq.domain.model.article;
+
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
 public final class Article {
 
     public final int id;
-    public final int feedId;
+    public final String feedId;
     public final String title;
     public final String link;
     public final long publicationDate;
@@ -11,7 +13,12 @@ public final class Article {
     public final boolean isNew;
     public final boolean isFavourite;
 
-    public Article(final int id, final int feedId, final String title, final String link, final long publicationDate, final boolean isNew, final boolean isFavourite) {
+    @Ignore
+    public Article(final String feedId, final String title, final String link, final long publicationDate) {
+        this(0, feedId, title, link, publicationDate, true, false);
+    }
+
+    public Article(final int id, final String feedId, final String title, final String link, final long publicationDate, final boolean isNew, final boolean isFavourite) {
         this.id = id;
         this.feedId = feedId;
         this.title = title;
@@ -35,9 +42,6 @@ public final class Article {
         if (id != article.id) {
             return false;
         }
-        if (feedId != article.feedId) {
-            return false;
-        }
         if (publicationDate != article.publicationDate) {
             return false;
         }
@@ -45,6 +49,9 @@ public final class Article {
             return false;
         }
         if (isFavourite != article.isFavourite) {
+            return false;
+        }
+        if (feedId != null ? !feedId.equals(article.feedId) : article.feedId != null) {
             return false;
         }
         if (title != null ? !title.equals(article.title) : article.title != null) {
@@ -56,7 +63,7 @@ public final class Article {
     @Override
     public int hashCode() {
         int result = id;
-        result = 31 * result + feedId;
+        result = 31 * result + (feedId != null ? feedId.hashCode() : 0);
         result = 31 * result + (title != null ? title.hashCode() : 0);
         result = 31 * result + (link != null ? link.hashCode() : 0);
         result = 31 * result + (int) (publicationDate ^ (publicationDate >>> 32));
@@ -69,10 +76,12 @@ public final class Article {
     public String toString() {
         return "Article{" +
                 "id=" + id +
-                ", feedId=" + feedId +
+                ", feedId='" + feedId + '\'' +
                 ", title='" + title + '\'' +
                 ", link='" + link + '\'' +
                 ", publicationDate=" + publicationDate +
+                ", isNew=" + isNew +
+                ", isFavourite=" + isFavourite +
                 '}';
     }
 }

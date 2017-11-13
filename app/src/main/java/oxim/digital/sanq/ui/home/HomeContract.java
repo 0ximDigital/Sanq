@@ -1,7 +1,7 @@
 package oxim.digital.sanq.ui.home;
 
 import oxim.digital.sanq.base.BaseView;
-import oxim.digital.sanq.base.ScopedPresenter;
+import oxim.digital.sanq.base.ViewPresenter;
 
 public interface HomeContract {
 
@@ -9,7 +9,7 @@ public interface HomeContract {
 
     }
 
-    interface Presenter extends ScopedPresenter {
+    interface Presenter extends ViewPresenter<HomeContract.View, Object> {
 
     }
 }

@@ -10,19 +10,17 @@ import javax.inject.Named;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Scheduler;
-import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.Disposables;
 import io.reactivex.functions.Consumer;
-import oxim.digital.sanq.configuration.ViewConsumerQueue;
-import oxim.digital.sanq.configuration.ViewConsumerQueueFactory;
+import io.reactivex.internal.functions.Functions;
+import io.reactivex.processors.BehaviorProcessor;
+import io.reactivex.processors.FlowableProcessor;
 import oxim.digital.sanq.dagger.application.module.ThreadingModule;
 import oxim.digital.sanq.router.Router;
 
-public abstract class BasePresenter<View extends BaseView> implements ScopedPresenter {
-
-    @Inject
-    ViewConsumerQueueFactory viewConsumerQueueFactory;
+public abstract class BasePresenter<View, ViewState> implements ViewPresenter<View, ViewState> {
 
     @Inject
     @Named(ThreadingModule.MAIN_SCHEDULER)
@@ -35,45 +33,54 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
     @Inject
     protected Router router;
 
-    private final View view;
-    private ViewConsumerQueue<View> viewConsumerQueue;
+    private final FlowableProcessor<ViewState> viewStateFlowable = BehaviorProcessor.<ViewState> create().toSerialized();
 
-    private CompositeDisposable disposables = new CompositeDisposable();
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
-    public BasePresenter(final View view) {
-        this.view = view;
+    private ViewState viewState;
+    private Disposable viewObservingDisposable = Disposables.disposed();
+
+    public BasePresenter() {
+        viewState = initialViewState();
+        viewStateFlowable.onNext(viewState);
     }
+
+    protected abstract ViewState initialViewState();
 
     @Override
     @CallSuper
     public void start() {
-        this.viewConsumerQueue = viewConsumerQueueFactory.getViewConsumerQueue();
-
-        addDisposable(viewConsumerQueue.viewConsumersFlowable()
-                                       .observeOn(observeScheduler)
-                                       .subscribe(this::onViewAction, this::logError));
-    }
-
-    private void onViewAction(final Consumer<View> viewAction) throws Exception {
-        viewAction.accept(view);
+        // Template
     }
 
     @Override
-    public final void activate() {
-        viewConsumerQueue.resume();
+    public final void onViewAttached(final View view) {
+        viewObservingDisposable = observeView(view);
+    }
+
+    /**
+     * Override to observe view
+     *
+     * @return Disposable to be disposed when the view is gone
+     */
+    protected Disposable observeView(final View view) {
+        return Disposables.disposed();
     }
 
     @Override
-    @CallSuper
-    public final void deactivate() {
-        viewConsumerQueue.pause();
+    public Flowable<ViewState> viewState() {
+        return viewStateFlowable.distinctUntilChanged(Object::hashCode).observeOn(observeScheduler);
+    }
+
+    @Override
+    public final void onViewDetached() {
+        viewObservingDisposable.dispose();
     }
 
     @Override
     @CallSuper
     public void destroy() {
         disposables.clear();
-        viewConsumerQueue.destroy();
     }
 
     @Override
@@ -81,26 +88,33 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         router.goBack();
     }
 
-    // TODO - data source builder? Something line subscribeTo(source).onError(thr -> ).onCompletion(() -> ).onValue(val -> )
-
-    public void subscribeTo(final Flowable<Consumer<View>> flowable, final Consumer<View> completionConsumer, final Consumer<Throwable> errorConsumer) {
-        addDisposable(flowable.observeOn(observeScheduler).subscribe(this::consumeView, errorConsumer, () -> consumeView(completionConsumer)));
+    public void query(final Flowable<Consumer<ViewState>> flowable) {
+        buildQuery(flowable).assemble();
     }
 
-    public void subscribeTo(final Single<Consumer<View>> single, final Consumer<Throwable> errorConsumer) {
-        addDisposable(single.observeOn(observeScheduler).subscribe(this::consumeView, errorConsumer));
+    public void runCommand(final Completable completable) {
+        buildCommand(completable).assemble();
     }
 
-    public void subscribeTo(final Completable completable, final Consumer<View> completionConsumer, final Consumer<Throwable> errorConsumer) {
-        addDisposable(completable.observeOn(observeScheduler).subscribe(() -> consumeView(completionConsumer), errorConsumer));
+    public QueryBuilder buildQuery(final Flowable<Consumer<ViewState>> flowable) {
+        return new QueryBuilder(flowable);
     }
 
-    private void addDisposable(final Disposable disposable) {
+    public QueryBuilder buildCommand(final Completable completable) {
+        return new QueryBuilder(completable);
+    }
+
+    protected void addDisposable(final Disposable disposable) {
         disposables.add(disposable);
     }
 
-    protected void consumeView(final Consumer<View> viewConsumer) {
-        viewConsumerQueue.enqueueViewConsumer(viewConsumer);
+    protected void viewStateAction(final Consumer<ViewState> viewStateAction) {
+        try {
+            viewStateAction.accept(viewState);
+            viewStateFlowable.onNext(viewState);
+        } catch (final Exception e) {
+            logError(e);
+        }
     }
 
     public final void logError(final Throwable throwable) {
@@ -110,7 +124,82 @@ public abstract class BasePresenter<View extends BaseView> implements ScopedPres
         }
     }
 
-    public final void noOp(final Object object) {
-        // No-op
+    protected final class QueryBuilder {
+
+        private Flowable<Consumer<ViewState>> flowable;
+        private Completable completable;
+
+        private Consumer<Throwable> errorAction = BasePresenter.this::logError;
+        private Consumer<ViewState> completionAction = viewStateFlowable::onNext;
+
+        public QueryBuilder(final Flowable<Consumer<ViewState>> flowable) {
+            this.flowable = flowable;
+        }
+
+        public QueryBuilder(final Completable completable) {
+            this.completable = completable;
+        }
+
+        public QueryBuilder flowable(final Flowable<Consumer<ViewState>> flowable) {
+            this.flowable = flowable;
+            return this;
+        }
+
+        public QueryBuilder completable(final Completable completable) {
+            this.completable = completable;
+            return this;
+        }
+
+        public QueryBuilder onError(final Consumer<Throwable> errorAction) {
+            this.errorAction = new ChainedConsumer<>(this.errorAction, errorAction);
+            return this;
+        }
+
+        public QueryBuilder onCompleted(final Consumer<ViewState> completionAction) {
+            this.completionAction = new ChainedConsumer<>(this.completionAction, completionAction);
+            return this;
+        }
+
+        public void assemble() {
+            disposables.add(subscribe());
+        }
+
+        public Disposable subscribe() {
+            return flowable != null ? assembleFlowable() : assembleCompletable();
+        }
+
+        private Disposable assembleFlowable() {
+            return flowable
+                    .observeOn(observeScheduler)
+                    .subscribeOn(backgroundScheduler)
+                    .subscribe(BasePresenter.this::viewStateAction,
+                               errorAction,
+                               completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION);
+        }
+
+        private Disposable assembleCompletable() {
+            return completable
+                    .observeOn(observeScheduler)
+                    .subscribeOn(backgroundScheduler)
+                    .subscribe(completionAction != null ? () -> completionAction.accept(viewState) : Functions.EMPTY_ACTION,
+                               errorAction);
+        }
+    }
+
+    private static final class ChainedConsumer<T> implements Consumer<T> {
+
+        private final Consumer<T> actual;
+        private final Consumer<T> next;
+
+        public ChainedConsumer(final Consumer<T> actual, final Consumer<T> next) {
+            this.actual = actual;
+            this.next = next;
+        }
+
+        @Override
+        public void accept(final T t) throws Exception {
+            actual.accept(t);
+            next.accept(t);
+        }
     }
 }

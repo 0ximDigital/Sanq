@@ -2,8 +2,8 @@ package oxim.digital.sanq.ui.model.mapper;
 
 import java.util.List;
 
-import oxim.digital.sanq.domain.model.Article;
-import oxim.digital.sanq.domain.model.Feed;
+import oxim.digital.sanq.domain.model.article.Article;
+import oxim.digital.sanq.domain.model.feed.Feed;
 import oxim.digital.sanq.ui.model.ArticleViewModel;
 import oxim.digital.sanq.ui.model.FeedViewModel;
 

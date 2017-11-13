@@ -4,6 +4,7 @@ import android.arch.persistence.room.Database;
 import android.arch.persistence.room.RoomDatabase;
 
 import oxim.digital.sanq.data.feed.db.dao.ArticleDao;
+import oxim.digital.sanq.data.feed.db.dao.FeedDao;
 import oxim.digital.sanq.data.feed.db.model.ArticleModel;
 import oxim.digital.sanq.data.feed.db.model.FeedModel;
 
@@ -18,4 +19,6 @@ public abstract class FeedDatabase extends RoomDatabase {
     public static final int VERSION = 1;
 
     public abstract ArticleDao articleDao();
+
+    public abstract FeedDao feedDao();
 }

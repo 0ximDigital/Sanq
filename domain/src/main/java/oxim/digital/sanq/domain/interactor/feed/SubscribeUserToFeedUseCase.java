@@ -1,4 +1,6 @@
-package oxim.digital.sanq.domain.interactor;
+package oxim.digital.sanq.domain.interactor.feed;
+
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import oxim.digital.sanq.domain.interactor.type.CommandUseCaseWithParams;
@@ -14,6 +16,6 @@ public final class SubscribeUserToFeedUseCase implements CommandUseCaseWithParam
 
     @Override
     public Completable execute(final String feedUrl) {
-        return feedRepository.createNewFeed(feedUrl);
+        return Completable.timer(4, TimeUnit.SECONDS).andThen(feedRepository.createNewFeed(feedUrl));
     }
 }

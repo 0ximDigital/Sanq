@@ -6,7 +6,7 @@ import javax.inject.Inject;
 
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseActivity;
-import oxim.digital.sanq.base.ScopedPresenter;
+import oxim.digital.sanq.base.ViewPresenter;
 import oxim.digital.sanq.dagger.activity.ActivityComponent;
 
 public class HomeActivity extends BaseActivity implements HomeContract.View {
@@ -26,7 +26,7 @@ public class HomeActivity extends BaseActivity implements HomeContract.View {
     }
 
     @Override
-    protected ScopedPresenter getPresenter() {
+    protected ViewPresenter getPresenter() {
         return presenter;
     }
 }

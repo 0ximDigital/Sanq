@@ -2,17 +2,18 @@ package oxim.digital.sanq.data.feed.db.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
 @Entity(tableName = "feeds",
         indices = {@Index(value = "url", unique = true)})
 public final class FeedModel {
 
     @ColumnInfo
-    @PrimaryKey(autoGenerate = true)
-    int id;
+    @NonNull
+    @PrimaryKey
+    String id;
 
     @ColumnInfo(name = "title")
     String title;
@@ -29,12 +30,7 @@ public final class FeedModel {
     @ColumnInfo(name = "url")
     String url;
 
-    @Ignore
-    public FeedModel(final String title, final String imageUrl, final String pageLink, final String description, final String url) {
-        this(0, title, imageUrl, pageLink, description, url);
-    }
-
-    public FeedModel(final int id, final String title, final String imageUrl, final String pageLink, final String description, final String url) {
+    public FeedModel(@NonNull final String id, final String title, final String imageUrl, final String pageLink, final String description, final String url) {
         this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
@@ -43,48 +39,48 @@ public final class FeedModel {
         this.url = url;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
+    }
+
+    public void setId(@NonNull final String id) {
+        this.id = id;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public String getPageLink() {
-        return pageLink;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setId(final int id) {
-        this.id = id;
-    }
-
     public void setTitle(final String title) {
         this.title = title;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public void setImageUrl(final String imageUrl) {
         this.imageUrl = imageUrl;
     }
 
+    public String getPageLink() {
+        return pageLink;
+    }
+
     public void setPageLink(final String pageLink) {
         this.pageLink = pageLink;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public void setDescription(final String description) {
         this.description = description;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     public void setUrl(final String url) {
@@ -102,7 +98,7 @@ public final class FeedModel {
 
         final FeedModel feedModel = (FeedModel) o;
 
-        if (id != feedModel.id) {
+        if (id != null ? !id.equals(feedModel.id) : feedModel.id != null) {
             return false;
         }
         if (title != null ? !title.equals(feedModel.title) : feedModel.title != null) {
@@ -122,7 +118,7 @@ public final class FeedModel {
 
     @Override
     public int hashCode() {
-        int result = id;
+        int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (title != null ? title.hashCode() : 0);
         result = 31 * result + (imageUrl != null ? imageUrl.hashCode() : 0);
         result = 31 * result + (pageLink != null ? pageLink.hashCode() : 0);

@@ -14,7 +14,7 @@ public final class ArticleModel {
     int id;
 
     @ColumnInfo(name = "feed_id")
-    int feedId;
+    String feedId;
 
     @ColumnInfo(name = "title")
     String title;
@@ -32,11 +32,11 @@ public final class ArticleModel {
     boolean isFavourite;
 
     @Ignore
-    public ArticleModel(final int feedId, final String title, final String link, final long publicationDate) {
+    public ArticleModel(final String feedId, final String title, final String link, final long publicationDate) {
         this(feedId, title, link, publicationDate, true, false);
     }
 
-    public ArticleModel(final int feedId, final String title, final String link, final long publicationDate, final boolean isNew, final boolean isFavourite) {
+    public ArticleModel(final String feedId, final String title, final String link, final long publicationDate, final boolean isNew, final boolean isFavourite) {
         this.feedId = feedId;
         this.title = title;
         this.link = link;
@@ -49,52 +49,52 @@ public final class ArticleModel {
         return id;
     }
 
-    public int getFeedId() {
+    public void setId(final int id) {
+        this.id = id;
+    }
+
+    public String getFeedId() {
         return feedId;
+    }
+
+    public void setFeedId(final String feedId) {
+        this.feedId = feedId;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public String getLink() {
-        return link;
-    }
-
-    public long getPublicationDate() {
-        return publicationDate;
-    }
-
-    public boolean isNew() {
-        return isNew;
-    }
-
-    public boolean isFavourite() {
-        return isFavourite;
-    }
-
-    public void setId(final int id) {
-        this.id = id;
-    }
-
-    public void setFeedId(final int feedId) {
-        this.feedId = feedId;
-    }
-
     public void setTitle(final String title) {
         this.title = title;
+    }
+
+    public String getLink() {
+        return link;
     }
 
     public void setLink(final String link) {
         this.link = link;
     }
 
+    public long getPublicationDate() {
+        return publicationDate;
+    }
+
     public void setPublicationDate(final long publicationDate) {
         this.publicationDate = publicationDate;
     }
 
+    public boolean isNew() {
+        return isNew;
+    }
+
     public void setNew(final boolean aNew) {
         isNew = aNew;
+    }
+
+    public boolean isFavourite() {
+        return isFavourite;
     }
 
     public void setFavourite(final boolean favourite) {
@@ -115,9 +115,6 @@ public final class ArticleModel {
         if (id != that.id) {
             return false;
         }
-        if (feedId != that.feedId) {
-            return false;
-        }
         if (publicationDate != that.publicationDate) {
             return false;
         }
@@ -125,6 +122,9 @@ public final class ArticleModel {
             return false;
         }
         if (isFavourite != that.isFavourite) {
+            return false;
+        }
+        if (feedId != null ? !feedId.equals(that.feedId) : that.feedId != null) {
             return false;
         }
         if (title != null ? !title.equals(that.title) : that.title != null) {
@@ -136,7 +136,7 @@ public final class ArticleModel {
     @Override
     public int hashCode() {
         int result = id;
-        result = 31 * result + feedId;
+        result = 31 * result + (feedId != null ? feedId.hashCode() : 0);
         result = 31 * result + (title != null ? title.hashCode() : 0);
         result = 31 * result + (link != null ? link.hashCode() : 0);
         result = 31 * result + (int) (publicationDate ^ (publicationDate >>> 32));
@@ -147,9 +147,11 @@ public final class ArticleModel {
 
     @Override
     public String toString() {
-        return "\nArticleModel{" +
+        return "ArticleModel{" +
                 "id=" + id +
+                ", feedId='" + feedId + '\'' +
                 ", title='" + title + '\'' +
+                ", isNew=" + isNew +
                 ", isFavourite=" + isFavourite +
                 '}';
     }

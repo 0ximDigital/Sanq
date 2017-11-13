@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import oxim.digital.sanq.dagger.activity.DaggerActivity;
 import oxim.digital.sanq.util.ActivityUtils;
 
-public abstract class BaseActivity extends DaggerActivity implements BaseView {
+public abstract class BaseActivity extends DaggerActivity {
 
     @Inject
     protected FragmentManager fragmentManager;
@@ -20,19 +20,13 @@ public abstract class BaseActivity extends DaggerActivity implements BaseView {
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getPresenter().start();
+        getPresenter().onViewAttached(this);
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        getPresenter().activate();
-    }
-
-    @Override
-    protected void onStop() {
-        getPresenter().deactivate();
-        super.onStop();
+    protected void onDestroy() {
+        getPresenter().onViewDetached();
+        super.onDestroy();
     }
 
     @Override
@@ -42,11 +36,5 @@ public abstract class BaseActivity extends DaggerActivity implements BaseView {
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        getPresenter().destroy();
-        super.onDestroy();
-    }
-
-    protected abstract ScopedPresenter getPresenter();
+    protected abstract ViewPresenter getPresenter();
 }

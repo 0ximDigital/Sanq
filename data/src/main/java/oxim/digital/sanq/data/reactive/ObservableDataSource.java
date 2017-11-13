@@ -23,6 +23,8 @@ public abstract class ObservableDataSource<DataSource> implements InvalidatingDa
 
     private static final int LAST_ITEM = 1;
 
+    // TODO - secondary weak cache fot the flowables, in order not to requery in a case of configuration change if only one subscriber was subscribed
+
     @SuppressLint("UseSparseArrays")
     private final Map<Class, Flowable> flowableMap = new HashMap<>();
     private final List<DataSourceInvalidationObserver> dataSourceInvalidationObservers = new LinkedList<>();
