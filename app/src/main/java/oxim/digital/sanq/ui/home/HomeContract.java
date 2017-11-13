@@ -9,7 +9,7 @@ public interface HomeContract {
 
     }
 
-    interface Presenter extends ViewPresenter<Object> {
+    interface Presenter extends ViewPresenter<HomeContract.View, Object> {
 
     }
 }

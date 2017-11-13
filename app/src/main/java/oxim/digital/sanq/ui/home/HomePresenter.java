@@ -2,7 +2,7 @@ package oxim.digital.sanq.ui.home;
 
 import oxim.digital.sanq.base.BasePresenter;
 
-public final class HomePresenter extends BasePresenter<Object> implements HomeContract.Presenter {
+public final class HomePresenter extends BasePresenter<HomeContract.View, Object> implements HomeContract.Presenter {
 
     @Override
     protected Object initialViewState() {

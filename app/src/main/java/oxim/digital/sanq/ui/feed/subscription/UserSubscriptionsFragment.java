@@ -4,9 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import java.util.List;
@@ -14,9 +12,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import butterknife.OnClick;
-import butterknife.Unbinder;
 import io.reactivex.disposables.CompositeDisposable;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
@@ -46,8 +42,6 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     private FeedAdapter feedAdapter;
 
-    private Unbinder unbinder = Unbinder.EMPTY;
-
     private CompositeDisposable dataDisposables = new CompositeDisposable();
 
     public static UserSubscriptionsFragment newInstance() {
@@ -64,12 +58,9 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         return presenter;
     }
 
-    @Nullable
     @Override
-    public View onCreateView(final LayoutInflater inflater, @Nullable final ViewGroup container, @Nullable final Bundle savedInstanceState) {
-        final View fragmentView = inflater.inflate(R.layout.fragment_user_subscriptions, container, false);
-        unbinder = ButterKnife.bind(this, fragmentView);
-        return fragmentView;
+    protected int getLayoutResourceId() {
+        return R.layout.fragment_user_subscriptions;
     }
 
     @Override
@@ -84,9 +75,9 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
                                .subscribe(this::onViewState));
     }
 
-    private void onViewState(final UserSubscriptionsViewModel userSubscriptionsViewModel) {
-        showIsLoading(userSubscriptionsViewModel.isLoading());
-        showFeedSubscriptions(userSubscriptionsViewModel.getFeedViewModels());
+    private void onViewState(final UserSubscriptionsViewState userSubscriptionsViewState) {
+        showIsLoading(userSubscriptionsViewState.isLoading());
+        showFeedSubscriptions(userSubscriptionsViewState.getFeedViewModels());
     }
 
     private void showIsLoading(final boolean isLoading) {
@@ -117,13 +108,6 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     @OnClick(R.id.add_new_feed_button)
     public void onClick() {
-        presenter.subscribeToTheNewFeed("https://xkcd.com/rss.xml");
-    }
-
-    @Override
-    public void onDestroyView() {
-        unbinder.unbind();
-        // do not observe view state anymore
-        super.onDestroyView();
+        presenter.showNewFeedSubscriptionScreen();
     }
 }

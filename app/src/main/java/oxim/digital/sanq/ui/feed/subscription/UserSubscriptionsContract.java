@@ -9,8 +9,10 @@ public interface UserSubscriptionsContract {
 
     }
 
-    interface Presenter extends ViewPresenter<UserSubscriptionsViewModel> {
+    interface Presenter extends ViewPresenter<UserSubscriptionsContract.View, UserSubscriptionsViewState> {
 
         void subscribeToTheNewFeed(String feedUrl);
+
+        void showNewFeedSubscriptionScreen();
     }
 }

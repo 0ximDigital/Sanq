@@ -1,12 +1,14 @@
 package oxim.digital.sanq.router;
 
 import android.support.annotation.IdRes;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 
 import com.annimon.stream.Optional;
 
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.dagger.activity.DaggerActivity;
+import oxim.digital.sanq.ui.feed.create.NewFeedSubscriptionFragment;
 import oxim.digital.sanq.ui.feed.subscription.UserSubscriptionsFragment;
 
 public final class RouterImpl implements Router {
@@ -38,7 +40,11 @@ public final class RouterImpl implements Router {
 
     @Override
     public void showAddNewFeedScreen() {
-        // To be implemented
+        final Fragment fragment = NewFeedSubscriptionFragment.newInstance();
+        fragmentManager.beginTransaction()
+                       .add(CONTAINER_ID, fragment, NewFeedSubscriptionFragment.TAG)
+                       .addToBackStack(null)
+                       .commit();
     }
 
     @Override
