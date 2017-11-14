@@ -13,7 +13,8 @@ import butterknife.Unbinder;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import oxim.digital.sanq.dagger.fragment.DaggerFragment;
-import oxim.digital.sanq.domain.util.Conditions;
+
+import static oxim.digital.sanq.domain.util.Conditions.throwIf;
 
 public abstract class BaseFragment extends DaggerFragment implements BaseView, BackPropagatingFragment {
 
@@ -39,8 +40,7 @@ public abstract class BaseFragment extends DaggerFragment implements BaseView, B
     }
 
     protected void addDisposable(final Disposable disposable) {
-        Conditions.throwIf(disposables.isDisposed(), () -> new UnsupportedOperationException("View disposables are disposed"));
-
+        throwIf(disposables.isDisposed(), () -> new UnsupportedOperationException("View disposables are disposed"));
         disposables.add(disposable);
     }
 

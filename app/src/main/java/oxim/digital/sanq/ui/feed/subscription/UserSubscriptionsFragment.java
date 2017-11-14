@@ -13,7 +13,6 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.OnClick;
-import io.reactivex.disposables.CompositeDisposable;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
 import oxim.digital.sanq.base.ViewPresenter;
@@ -42,8 +41,6 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     private FeedAdapter feedAdapter;
 
-    private CompositeDisposable dataDisposables = new CompositeDisposable();
-
     public static UserSubscriptionsFragment newInstance() {
         return new UserSubscriptionsFragment();
     }
@@ -70,6 +67,13 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         observeViewState();
     }
 
+    private void initializeRecyclerView() {
+        feedAdapter = new FeedAdapter(imageLoader);
+        feedAdapter.setHasStableIds(true);
+        userFeedsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        userFeedsRecyclerView.setAdapter(feedAdapter);
+    }
+
     private void observeViewState() {
         addDisposable(presenter.viewState()
                                .subscribe(this::onViewState));
@@ -82,19 +86,6 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     private void showIsLoading(final boolean isLoading) {
         loadingIndicator.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-    }
-
-    private void initializeRecyclerView() {
-        feedAdapter = new FeedAdapter(imageLoader);
-        feedAdapter.setHasStableIds(true);
-        userFeedsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        userFeedsRecyclerView.setAdapter(feedAdapter);
-    }
-
-    @Override
-    public void onPause() {
-        dataDisposables.clear();
-        super.onPause();
     }
 
     public void showFeedSubscriptions(final List<FeedViewModel> feedSubscriptions) {
