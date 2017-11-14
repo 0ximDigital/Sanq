@@ -86,6 +86,7 @@ public abstract class BasePresenter<View, ViewState> implements ViewPresenter<Vi
     @Override
     public final void onViewDetached() {
         viewObservingDisposable.dispose();
+        viewObservingDisposable = Disposables.disposed();
     }
 
     /**
