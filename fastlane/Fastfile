@@ -1,0 +1,160 @@
+# Customise this file, documentation can be found here:
+# https://github.com/fastlane/fastlane/tree/master/fastlane/docs
+# All available actions: https://docs.fastlane.tools/actions
+# can also be listed using the `fastlane actions` command
+
+# Change the syntax highlighting to Ruby
+# All lines starting with a # are ignored when running `fastlane`
+
+# If you want to automatically update fastlane if a new version is available:
+# update_fastlane
+
+# sh "your_script.sh"
+
+# This is the minimum version number required.
+# Update this, if you use features of a newer version
+fastlane_version "2.28.3"
+
+default_platform :android
+
+platform :android do
+
+  before_all do
+
+    ENV['SLACK_URL'] = "https://hooks.slack.com/services/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"
+    ENV['IS_LANE_BUILD'] = "true"
+
+    # Define per project
+    ENV['DEFAULT_SLACK_CHANNEL'] = ""
+    ENV['DEFAULT_FLAVOR'] = ""
+    ENV['DEFAULT_BUILD_TYPE'] = ""
+    ENV['DEFAULT_CRASHLYTICS_GROUP'] = ""
+
+  end
+
+  lane :debug_lane do
+    puts "[INFO] debugging"
+
+    pipeline(
+      build_type: 'debug',
+      slack: true,
+      version_bump: 'minor'
+    )
+  end
+
+  after_all do |lane|
+    # Called if lane completed successfully
+
+  end
+
+  error do |lane, exception|
+     #slack(
+     #  message: exception.message,
+     #  success: false,
+     #  default_payloads: [:git_branch, :test_result, :lane]
+     #)
+  end
+
+  # Available options
+  #    check:                     - run quality checks
+  #    unit_tests:                - run unit tests
+  #    instrumentation_tests:     - run instrumentation tests
+
+  #    specific_branch:           - branch to build, builds current branch if not specified
+  #    version_bump:              - Version number to bump [major|minor|patch|build], build by default
+
+  #    flavor:                    - flavor to build
+  #    build_type:                - build type
+
+  #    vcs:                       - commit new changes due to build process, true by default
+  #    tag:                       - create git tag
+
+  #    crashlytics_deploy:        - deploy build to crashlytics
+  #    crashlytics_groups:        - crashlytics groups that we deploy build to
+
+  #    slack:                     - notify success [true|false], failure is notified by default
+  #    slack_message:             - slack message
+  #    slack_icon_url:            - url for fastlane slack user icon
+  #    slack_channel:             - channel to be notified, using ENV["DEFAULT_SLACK_CHANNEL"] if not set
+
+  private_lane :pipeline do |options|
+
+    # ensure_git_status_clean
+
+    if ENV['IS_BUILD_SERVER'] == 'true'
+      puts "[INFO] Running on CI environment."
+      puts "[INFO] Performing git checkout for branch: #{ENV["BUILD_BRANCH"]}"
+      sh "git checkout #{ENV["BUILD_BRANCH"]}"
+      sh "git pull"
+    end
+
+    ensure_git_branch(branch: options[:specific_branch]) unless !options[:specific_branch]
+
+    gradle(task: "check") if options[:check]
+    gradle(task: "test") if options[:unit_tests]
+    gradle(task: "connectedCheck") if options[:instrumentation_tests]
+
+    gradle(task: "clean")
+
+    if options[:version_bump]
+        bump_number = !options[:version_bump].nil? ? options[:version_bump] : 'build'
+        bump_action = "bump" + bump_number.capitalize + "Version"
+        puts "[INFO] bumping version with type: #{bump_action}"
+        gradle(task: bump_action)
+    end
+
+    flavor = !options[:flavor].nil? ? options[:flavor] : ENV['DEFAULT_FLAVOR']
+    build_type = !options[:build_type].nil? ? options[:build_type] : ENV['DEFAULT_BUILD_TYPE']
+    puts "[INFO] Building variant: #{flavor}#{build_type}"
+
+    gradle(
+      task:'assemble',
+      flavor: flavor,
+      build_type: build_type
+    )
+
+    if options[:crashlytics_deploy]
+      crashlytics_groups = !options[:crashlytics_groups].nil? ? options[:crashlytics_groups] : ENV['DEFAULT_CRASHLYTICS_GROUP']
+
+      crashlytics(
+        groups: crashlytics_groups,
+        notifications: true
+      )
+    end
+
+    version_name = get_version_name
+
+    if options[:vcs]
+      git_commit(
+        path: ["./versions.properties"],
+        message: "Build Version Bump for version: " + version_name)
+
+      add_git_tag(tag: "v#{version_name}") if options[:git_tag]
+
+      push_to_git_remote(
+        local_branch: git_branch,
+        remote_branch: git_branch,
+        remote: git_repo)
+    end
+
+    if options[:slack]
+      slack_channel = !options[:channel].nil? ? options[:channel] : ENV["DEFAULT_SLACK_CHANNEL"]
+
+      slack(
+        icon_url: options[:slack_icon],
+        message: !options[:slack_message].nil? ? options[:slack_message] : "New build available! :rocket:",
+        channel: slack_channel,
+        default_payloads: [:git_branch],
+        payload: {
+          'Version' => "#{version_name}",
+          'Build variant' => "#{flavor}#{build_type}"
+        })
+    end
+
+  end
+end
+
+def get_version_name
+  versions = Hash[File.read("../versions.properties").split("\n").map{ |line| line.split('=')}]
+  return "#{versions["VERSION_MAJOR"]}.#{versions["VERSION_MINOR"]}.#{versions["VERSION_PATCH"]} (#{versions["VERSION_BUILD"]})"
+end

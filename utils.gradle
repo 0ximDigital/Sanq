@@ -16,9 +16,6 @@ task bumpMajorVersion {
         versions['VERSION_BUILD'] = ZERO
 
         storeVersions(versions)
-
-        println(getVersionCode())
-        println(getVersionName())
     }
 }
 
@@ -79,7 +76,7 @@ String getVersionName() {
 Properties getVersions() {
     def versionsFile = file('versions.properties')
     if (!versionsFile.canRead()) {
-        throw new ProjectConfigurationException("Cannot read versions.properties file")
+        throw new ProjectConfigurationException("Cannot read versions.properties file", null)
     }
 
     Properties versions = new Properties()
@@ -90,7 +87,7 @@ Properties getVersions() {
 void storeVersions(Properties versions) {
     def versionsFile = file('versions.properties')
     if (!versionsFile.canWrite()) {
-        throw new ProjectConfigurationException("Cannot write versions.properties file")
+        throw new ProjectConfigurationException("Cannot write versions.properties file", null)
     }
 
     versions.store(versionsFile.newWriter(), null)
