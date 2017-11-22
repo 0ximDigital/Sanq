@@ -13,13 +13,18 @@ android {
     buildToolsVersion project.ext.buildToolsVersion
 
     defaultConfig {
+
         applicationId "oxim.digital.sanq"
+
         minSdkVersion project.ext.minSdkVersion
         targetSdkVersion project.ext.targetSdkVersion
-        versionCode 1
-        versionName "0.1"
+
+        versionCode = project.ext.versionCode
+        versionName = project.ext.versionName
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false

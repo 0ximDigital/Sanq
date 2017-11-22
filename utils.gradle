@@ -1,0 +1,97 @@
+def ZERO = 0.toString()
+
+ext.utils = [
+        getVersionName: getVersionName(),
+        getVersionCode: getVersionCode()
+]
+
+task bumpMajorVersion {
+    doLast {
+        Properties versions = getVersions()
+
+        def newMajorVersion = versions['VERSION_MAJOR'].toInteger() + 1
+        versions['VERSION_MAJOR'] = newMajorVersion.toString()
+        versions['VERSION_MINOR'] = ZERO
+        versions['VERSION_PATCH'] = ZERO
+        versions['VERSION_BUILD'] = ZERO
+
+        storeVersions(versions)
+
+        println(getVersionCode())
+        println(getVersionName())
+    }
+}
+
+task bumpMinorVersion {
+    doLast {
+        Properties versions = getVersions()
+
+        def newMinorVersion = versions['VERSION_MINOR'].toInteger() + 1
+        versions['VERSION_MINOR'] = newMinorVersion.toString()
+        versions['VERSION_PATCH'] = ZERO
+        versions['VERSION_BUILD'] = ZERO
+
+        storeVersions(versions)
+    }
+}
+
+task bumpPatchVersion {
+    doLast {
+        Properties versions = getVersions()
+
+        def newPatchVersion = versions['VERSION_PATCH'].toInteger() + 1
+        versions['VERSION_PATCH'] = newPatchVersion.toString()
+        versions['VERSION_BUILD'] = ZERO
+
+        storeVersions(versions)
+    }
+}
+
+task bumpBuildVersion {
+    doLast {
+        Properties versions = getVersions()
+
+        def newBuildVersion = versions['VERSION_BUILD'].toInteger() + 1
+        versions['VERSION_BUILD'] = newBuildVersion.toString()
+
+        storeVersions(versions)
+    }
+}
+
+Long getVersionCode() {
+    if (System.getenv('IS_LANE_BUILD') != "true") {
+        return 0
+    }
+
+    def majorVersion = versions['VERSION_MAJOR'].toInteger()
+    def minorVersion = versions['VERSION_MINOR'].toInteger()
+    def patchVersion = versions['VERSION_PATCH'].toInteger()
+    def buildVersion = versions['VERSION_BUILD'].toInteger()
+
+    return buildVersion + (patchVersion * 1000) + (minorVersion * 100_000) + (majorVersion * 10_000_000)
+}
+
+String getVersionName() {
+    def versions = getVersions()
+    return "${versions['VERSION_MAJOR']}.${versions['VERSION_MINOR']}.${versions['VERSION_PATCH']} (${versions['VERSION_BUILD']})"
+}
+
+Properties getVersions() {
+    def versionsFile = file('versions.properties')
+    if (!versionsFile.canRead()) {
+        throw new ProjectConfigurationException("Cannot read versions.properties file")
+    }
+
+    Properties versions = new Properties()
+    versions.load(new FileInputStream(versionsFile))
+    return versions
+}
+
+void storeVersions(Properties versions) {
+    def versionsFile = file('versions.properties')
+    if (!versionsFile.canWrite()) {
+        throw new ProjectConfigurationException("Cannot write versions.properties file")
+    }
+
+    versions.store(versionsFile.newWriter(), null)
+}

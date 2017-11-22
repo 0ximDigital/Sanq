@@ -6,6 +6,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import oxim.digital.sanq.BuildConfig;
 import oxim.digital.sanq.R;
 import oxim.digital.sanq.base.BaseFragment;
 import oxim.digital.sanq.base.ViewPresenter;
@@ -38,6 +40,12 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
 
     @BindView(R.id.loading_indicator)
     View loadingIndicator;
+
+    @BindView(R.id.version_name_text)
+    TextView versionNameText;
+
+    @BindView(R.id.version_code_text)
+    TextView versionCodeText;
 
     private FeedAdapter feedAdapter;
 
@@ -65,6 +73,13 @@ public final class UserSubscriptionsFragment extends BaseFragment implements Use
         super.onViewCreated(view, savedInstanceState);
         initializeRecyclerView();
         observeViewState();
+
+        showVersionDetails();
+    }
+
+    private void showVersionDetails() {
+        versionNameText.setText("Version name - " + BuildConfig.VERSION_NAME);
+        versionCodeText.setText("Version code - " + BuildConfig.VERSION_CODE);
     }
 
     private void initializeRecyclerView() {
